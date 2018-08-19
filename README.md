@@ -1,4 +1,5 @@
-#adiumtoeml
+# adiumtoeml
+
 Conversion utility to migrate Adium chat logs to RFC822 .eml files for archiving.
 
 Based on SVN version `r1034 | 2014-12-31 03:15:45 -0500 (Wed, 31 Dec 2014)` with minor updates before uploading to Github.  Further updates are not expected unless contributed by the community, as I am (sadly) no longer using Adium regularly. 
