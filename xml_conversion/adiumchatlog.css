@@ -1,0 +1,71 @@
+/* in the xslt i hotlink my own hosted version of this file.. */
+
+
+
+body {
+	 font-family: sans-serif; font-size: 85%;
+}
+div.event {
+	color: #222222; background: #EEEEEE; border-color: #CCCCCC;
+	border-style: solid;
+	border-width: 1px;
+	margin: 1px; padding: 2px;
+}
+div.message {
+	color: #000000; background: #F6FFED; border-color: #9EC678;
+}
+div.principal {
+	color: #000000; background: #F7FAFF; border-color: #98B4DF;
+}
+div.follow-on {
+	border-top-style: solid;
+	border-top-width: 1px;
+}
+div.sender {
+	color: #386C05; background: #BBEE99; border-color: #9EC678;
+	border-style: solid;
+	border-width: 1px;
+	margin: 1px; padding: 2px;
+	font-weight: bold;
+}
+div.principal div.sender {
+	color: #234578; background: #CCDDFF; border-color: #98B4DF;
+}
+div.meta {
+	float: left; padding-right: 0.5em;
+}
+div.content {
+	margin-left: 14em;
+}
+span.sender {
+	font-size: 90%;
+}
+span.time {
+	font-size: 90%; color: gray;
+}
+
+/* i started customizing from here */
+
+.message .content > div:last-child > span { font-family: inherit !important;  font-size: inherit!important;}
+
+
+.message.auto { 
+  opacity: 0.2;
+  }
+.message.auto .content > div:last-child > span { font-size: 50% !important;}
+span.auto { display:none;}
+	  
+status .sender { display:none;}
+status { font-size: 50%; display:block; border-left: solid 5px hsl(108, 79%, 50%); }
+status .sender + div { display: inline;}
+status > div:last-child > span { font-size: 100% !important;}
+
+
+status[type="available"] { /* already done above */    }
+status[type="away"], 
+status[type="offline"] {  border-color: hsl(1, 57%, 50%);}
+status[type="idle"] {  border-color: hsl(60, 60%, 62%);}
+
+div.event { font-size: 50%; }   
+   
+  
