@@ -1,0 +1,33 @@
+﻿<div class="receive"><span class="timestamp">12:01:48 AM</span> <span class="sender">theirsn: </span><pre class="message">hey</pre></div>
+<div class="send"><span class="timestamp">12:01:50 AM</span> <span class="sender">mysn: </span><pre class="message">hey</pre></div>
+<div class="send"><span class="timestamp">12:02:06 AM</span> <span class="sender">mysn: </span><pre class="message">what's up</pre></div>
+<div class="send"><span class="timestamp">12:02:18 AM</span> <span class="sender">mysn: </span><pre class="message">i'm trying out a new instant message program</pre></div>
+<div class="send"><span class="timestamp">12:03:19 AM</span> <span class="sender">mysn: </span><pre class="message">it's called adium</pre></div>
+<div class="receive"><span class="timestamp">12:03:52 AM</span> <span class="sender">theirsn: </span><pre class="message">lol</pre></div>
+<div class="receive"><span class="timestamp">12:04:00 AM</span> <span class="sender">theirsn: </span><pre class="message">fun stuff</pre></div>
+<div class="receive"><span class="timestamp">12:04:08 AM</span> <span class="sender">theirsn: </span><pre class="message">is it a mac only thing?</pre></div>
+<div class="send"><span class="timestamp">12:11:15 AM</span> <span class="sender">mysn: </span><pre class="message">yep i believe so</pre></div>
+<div class="send"><span class="timestamp">12:11:27 AM</span> <span class="sender">mysn: </span><pre class="message">it's a multi protocol client</pre></div>
+<div class="send"><span class="timestamp">12:11:29 AM</span> <span class="sender">mysn: </span><pre class="message">seems neat</pre></div>
+<div class="receive"><span class="timestamp">12:12:08 AM</span> <span class="sender">theirsn: </span><pre class="message">oh so like trillian</pre></div>
+<div class="receive"><span class="timestamp">12:12:18 AM</span> <span class="sender">theirsn: </span><pre class="message">that's the one that i use</pre></div>
+<div class="send"><span class="timestamp">12:12:25 AM</span> <span class="sender">mysn: </span><pre class="message">yeah i think similar to that</pre></div>
+<div class="send"><span class="timestamp">12:12:26 AM</span> <span class="sender">mysn: </span><pre class="message">it also does encryption which is interesting</pre></div>
+<div class="receive"><span class="timestamp">12:12:43 AM</span> <span class="sender">theirsn: </span><pre class="message">for super seekrit stuff?</pre></div>
+<div class="send"><span class="timestamp">12:13:09 AM</span> <span class="sender">mysn: </span><pre class="message">yep</pre></div>
+<div class="receive"><span class="timestamp">12:13:16 AM</span> <span class="sender">theirsn: </span><pre class="message">do you like it?</pre></div>
+<div class="send"><span class="timestamp">12:13:18 AM</span> <span class="sender">mysn: </span><pre class="message">yeah i am liking it so far</pre></div>
+<div class="receive"><span class="timestamp">12:13:29 AM</span> <span class="sender">theirsn: </span><pre class="message">interesting</pre></div>
+<div class="receive"><span class="timestamp">12:13:54 AM</span> <span class="sender">theirsn: </span><pre class="message">too bad it's mac only</pre></div>
+<div class="send"><span class="timestamp">12:14:25 AM</span> <span class="sender">mysn: </span><pre class="message">yeah</pre></div>
+<div class="receive"><span class="timestamp">12:15:36 AM</span> <span class="sender">theirsn: </span><pre class="message">changing the subject</pre></div>
+<div class="receive"><span class="timestamp">12:15:50 AM</span> <span class="sender">theirsn: </span><pre class="message">have you looked at SA recently?</pre></div>
+<div class="send"><span class="timestamp">12:18:01 AM</span> <span class="sender">mysn: </span><pre class="message">SA as in <a href="http://www.somethingawful.com/" title="http://www.somethingawful.com/">http://www.somethingawful.com/</a> ??</pre></div>
+<div class="receive"><span class="timestamp">12:18:58 AM</span> <span class="sender">theirsn: </span><pre class="message">yep</pre></div>
+<div class="receive"><span class="timestamp">12:19:07 AM</span> <span class="sender">theirsn: </span><pre class="message">exactly</pre></div>
+<div class="send"><span class="timestamp">12:19:11 AM</span> <span class="sender">mysn: </span><pre class="message">hadn't really looked at it today though</pre></div>
+<div class="receive"><span class="timestamp">1:46:31 AM</span> <span class="sender">theirsn: </span><pre class="message">well i should go to bed</pre></div>
+<div class="send"><span class="timestamp">1:46:40 AM</span> <span class="sender">mysn: </span><pre class="message">yeah, probably should do the same thing here</pre></div>
+<div class="receive"><span class="timestamp">1:46:47 AM</span> <span class="sender">theirsn: </span><pre class="message">yay</pre></div>
+<div class="receive"><span class="timestamp">1:46:59 AM</span> <span class="sender">theirsn: </span><pre class="message">seeya later</pre></div>
+<div class="status">Jane Doe disconnected (1:47:02 AM)</div>

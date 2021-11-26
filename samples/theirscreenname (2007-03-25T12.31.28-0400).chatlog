@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<chat xmlns="http://purl.org/net/ulf/ns/0.4-02" account="mysn" service="AIM"><event type="windowOpened" sender="mysn" time="2007-03-25T12:31:28-04:00"/>
+<message sender="theirsn" time="2007-03-25T12:31:28-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">heeeeeey there</span></div></message>
+<message sender="mysn" time="2007-03-25T12:31:42-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">hey</span></div></message>
+<message sender="mysn" time="2007-03-25T12:31:44-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">how are you?</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:31:49-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">wazuuup?</span></div></message>
+<message sender="mysn" time="2007-03-25T12:31:52-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">i haven&apos;t talked to you in forever</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:31:56-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">lol you still alive and kickin&apos;?</span></div></message>
+<message sender="mysn" time="2007-03-25T12:32:01-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">not too much, i&apos;m actually at home right now in CT, for the weekend</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:32:01-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">*pokes you*</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:32:08-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">oh really! that&apos;s nice!</span></div></message>
+<message sender="mysn" time="2007-03-25T12:32:11-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">yep, just barely, but still here</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:32:15-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">lol</span></div></message>
+<message sender="mysn" time="2007-03-25T12:32:17-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">yeah, for my birthday</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:32:20-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">still working at the same job?</span></div></message>
+<message sender="mysn" time="2007-03-25T12:32:56-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">yeah</span></div></message>
+<message sender="mysn" time="2007-03-25T12:33:03-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">starting to think about getting out, though</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:33:47-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">oh?</span></div></message>
+<message sender="mysn" time="2007-03-25T12:33:52-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">yeah</span></div></message>
+<message sender="mysn" time="2007-03-25T12:33:54-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">considering</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:33:59-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">things getting frustrating for you? </span></div></message>
+<message sender="mysn" time="2007-03-25T12:34:24-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">hahah</span></div></message>
+<message sender="mysn" time="2007-03-25T12:34:38-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">eh, it&apos;s just boring and i don&apos;t think it&apos;s going anywhere</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:34:48-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">no chance for advancement?</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:35:11-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">:-(</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:35:28-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">well that&apos;s not cool</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:36:12-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">eeek</span></div></message>
+<message sender="mysn" time="2007-03-25T12:36:28-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">so i think i&apos;m just going to use it as a resume line when my current contract runs out in another 5 mos</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:36:48-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">oh it&apos;ll definitely be a solid addition to your resume</span></div></message>
+<message sender="mysn" time="2007-03-25T12:36:54-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">yeah, i think so</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:37:04-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">oh speaking of resumes</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:37:13-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">i really appreciate the resume advice</span></div></message>
+<message sender="theirsn" time="2007-03-25T12:38:08-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">some of the resumes i saw were just .... rough</span></div></message>
+<message sender="mysn" time="2007-03-25T12:46:07-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">lol</span></div></message>
+<message sender="mysn" time="2007-03-25T12:46:08-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">oh man</span></div></message>
+<message sender="mysn" time="2007-03-25T12:46:15-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">ouch. that&apos;s bad news</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:25:24-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">speaking of which</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:25:27-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">im hungry :-(</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:25:34-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">i need to go eat something</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:25:39-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">i&apos;ll get in touch with you later ;-)</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:25:58-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">maybe we can meet up next weekend</span></div></message>
+<message sender="mysn" time="2007-03-25T14:26:23-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">okay, yeah don&apos;t want to keep you from food</span></div></message>
+<message sender="mysn" time="2007-03-25T14:26:24-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">ttyl</span></div></message>
+<message sender="theirsn" time="2007-03-25T14:26:26-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">seeya</span></div></message>
+<status type="offline" sender="theirsn" time="2007-03-25T14:26:30-04:00"/>
+<event type="windowClosed" sender="mysn" time="2007-03-25T12:31:28-04:00"/>
+</chat>
