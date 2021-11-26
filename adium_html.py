@@ -3,6 +3,8 @@
 import logging
 import datetime
 
+import conversation
+
 
 def getdate(line, msg_base, filename):
     """Determine the date and time of an old-style Adium log, using a single

@@ -1,31 +1,79 @@
+#!/usr/bin/env python3
 # Utility functions for processing Adium XML-based log files
 
+import sys
 import logging
 import dateutil.parser
-import lxml.etree as ET
+import xml.etree.ElementTree as ET  # change from lxml to xml
+
+import conversation
 
 
-def tohtml(dom, xslt):
-    """Convert an Adium XML log (.chatlog) to HTML via an XSL transform.  Returns HTML string."""
-    # See http://stackoverflow.com/questions/16698935/how-to-transform-an-xml-file-using-xslt-in-python
-    transform = ET.XSLT(xslt)
-    html_dom = transform(dom)
-    ht = ET.tostring(html_dom, pretty_print='True')  # at this point we have well-formed HTML
-    return ht
+def toconv(infile):
+    """Take a file-like input object and parse to produce a Conversation object"""
+    conv = conversation.Conversation()  # instantiate Conversation object
+
+    dom = ET.parse(infile)  # parse the input file and get back ElementTree
+    logging.debug('Input parsed to: ' + str(dom))
+
+    root = dom.getroot()  # get the root element, which should be <chat>
+    logging.debug('Root element is: ' + str(root))
+
+    xmlns = get_xmlns(root)  # Get the XML namespace, if there is one (usually is)
+    logging.debug('XML Namespace is: ' + xmlns)
+
+    conv.set_service(root.attrib['service'])  # set the service (AIM, MSN, etc.)
+    logging.debug('IM service is ' + conv.service)
+
+    for e in root.iter():  # iterate over all child elements of the root
+        if e.tag == xmlns + 'event':  # Handle <event... />
+            logging.debug('Event found, type is ' + e.attrib['type'])
+            msg = conversation.Message('event')
+            msg.date = dateutil.parser.parse(e.attrib['time'])
+            if e.attrib['type'] == "windowOpened":
+                msg.text = 'Window opened by ' + e.attrib['sender']
+            if e.attrib['type'] == 'windowClosed':
+                msg.text = 'Window closed by ' + e.attrib['sender']
+            conv.add_message(msg)
+        if e.tag == xmlns + 'message':  # Handle <message>
+            logging.debug('Message found')
+            msg = conversation.Message('message')
+            msg.date = dateutil.parser.parse(e.attrib['time'])
+            for child in e:
+                msg.text += ET.tostring(child, encoding='unicode')  # TODO this leaves messy XML namespace stuff...
+            logging.debug('Message text is: ' + msg.text)
+            conv.add_message(msg)
+    return conv
 
 
-def getdom(fi):
-    """Parse the input file and return a DOM object."""
-    return ET.parse(fi)
+def get_xmlns(e):
+    if e.tag[0] == "{":
+        uri, ignore, tag = e.tag[1:].partition("}")
+    else:
+        uri = None
+    return '{' + uri + '}'
 
 
-def getdate(dom):
+def getstartdate(dom):
     """Parse XML log and determine date.  Returns a datetime object."""
-
     # Determine log time
     if len(dom.xpath('//@time')) == 0:
         raise ValueError("Log does not appear to contain any timestamps!")
+    times = dom.xpath('//@time')  # should return a list
+    try:
+        # We can't use datetime.datetime.strptime() here due to timezone, have to use dateutil
+        d = dateutil.parser.parse(times[0])
+    except ValueError:
+        # if first time won't parse, try the one after that, then give up
+        d = dateutil.parser.parse(times[1])
+    return d
 
+
+def getenddate(dom):
+    """Parse XML log and determine date.  Returns a datetime object."""
+    # Determine log time
+    if len(dom.xpath('//@time')) == 0:
+        raise ValueError("Log does not appear to contain any timestamps!")
     times = dom.xpath('//@time')  # should return a list
     try:
         # We can't use datetime.datetime.strptime() here due to timezone, have to use dateutil
@@ -33,7 +81,6 @@ def getdate(dom):
     except ValueError:
         # if last time won't parse, try the one before that, then give up
         d = dateutil.parser.parse(times[-2])
-
     return d
 
 
@@ -44,20 +91,9 @@ def getaccount(dom):
     return dom.xpath('//@account')[0]
 
 
-def getservice(dom):
-    """Determine IM service (AIM, MSN, etc.)"""
-    if len(dom.xpath('//@service')) == 0:
-        raise ValueError("Log does not appear to contain an 'account' element!")
-    return dom.xpath('//@service')[0]
-
-
-def getparticipants(dom):
-    """Determine participants in conversation.  Returns a list."""
-    if len(dom.xpath('//@sender')) == 0:
-        raise ValueError("Log does not appear to contain any 'sender' elements!")
-    participants = []
-    for a in dom.xpath('//@sender'):
-        if a not in participants:
-            logging.debug('Found new participant:' + a)
-            participants.append(a)
-    return participants
+if __name__ == "__main__":  # for test/debug purposes
+    logging.basicConfig(level=logging.DEBUG)
+    with open(sys.argv[1]) as fo:
+        input = fo
+        conv = toconv(input)
+        print(conv)

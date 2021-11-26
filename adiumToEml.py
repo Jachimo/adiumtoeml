@@ -18,6 +18,7 @@ import hashlib
 
 import adium_xml
 import adium_html
+import conversation
 
 
 localtz: str = 'America/New_York'
@@ -56,7 +57,7 @@ def main():
     outfilename = os.path.splitext(os.path.basename(args.infilename))[0] + '.eml'  # .mht or .mhtml also valid
     outpath = os.path.join(args.outdirname, outfilename)
     
-    # Test to see if a file already exists with that name
+    # Test to see if a file already exists with that name and stop if so
     # In some cases this may be undesirable/annoying so we can disable with flag --clobber
     if os.path.isfile(outpath):
         if not args.clobber:
@@ -65,15 +66,6 @@ def main():
         else:
             logging.warning('Output file ' + outpath + ' exists and will be overwritten.')
 
-    # Ensure XSL file can be read
-    if not args.configdir:
-        args.configdir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    if args.xslfile:
-        logging.info('XSL transform file set to: ' + args.xslfile)
-        xslpath = os.path.join(args.configdir, args.xslfile)
-    else:
-        xslpath = os.path.join(args.configdir, 'chatlog_transform.xsl')
-
     # Open input file
     try:
         fi = open(args.infilename, 'r')   # fi is a file object
@@ -81,36 +73,13 @@ def main():
     except IOError:
         logging.critical("I/O Error while opening input: " + args.infilename)
         return 1
-
-    # Create a conversation object
-    conv = {}
-    conv['service'] = ''
-    conv['participants'] = []
-    conv['html'] = ''
     
-    # Newer XML-based logs can be transformed into HTML (See https://trac.adium.im/wiki/XMLLogFormat)
-    if os.path.splitext(args.infilename)[-1] == '.chatlog':
+    # Newer Adium logs are XML (See https://trac.adium.im/wiki/XMLLogFormat)
+    if os.path.splitext(args.infilename)[-1] in ['.chatlog', '.xml']:
         logging.debug('XML chat log detected based on file extension.')
+        conv = adium_xml.toconv(fi)
 
-        try:
-            xslf = open(xslpath, 'r')
-        except IOError:
-            logging.critical('Cannot open: ' + xslpath)
-            return 1
-
-        dom = adium_xml.getdom(fi)
-        xslt = adium_xml.getdom(xslf)
-        conv['html'] = adium_xml.tohtml(dom, xslt).decode('us-ascii')
-
-        conv['participants'] = adium_xml.getparticipants(dom)
-        if len(conv['participants']) < 2:  # need at least 2 participants to construct headers
-            conv['participants'].append('UNKNOWN')
-
-        conv['dateobj'] = adium_xml.getdate(dom)
-
-        conv['service'] = adium_xml.getservice(dom)
-
-    # For old style fragementary-HTML Adium logs...
+    # Older logs are HTML "tag soup" (basically just HTML <body> contents)
     if os.path.splitext(args.infilename)[-1] == '.AdiumHTMLLog':
         logging.debug('HTML chat log detected based on file extension.')
 
@@ -122,17 +91,19 @@ def main():
             return 1
         
         # Parse the first line of the input file
-        conv['dateobj'] = adium_html.getdate( fi.readline(), msg_base, args.infilename ) # Only date is set
-        conv['participants'] = adium_html.getparticipants(fi)
+        conv.startdate = adium_html.getdate( fi.readline(), msg_base, args.infilename ) # Only date is set
+        participants = adium_html.getparticipants(fi)
+        for p in participants:
+            conv.add_participant(p)
         
         doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n'
         fi.seek(0)  # make sure we don't leave off the first line...
-        conv['html'] = doctype + header.read() + fi.read() + footer.read() + '\n'  # construct message using static header/footer files
+        conv.html = doctype + header.read() + fi.read() + footer.read() + '\n'  # construct message using static header/footer files
 
     fi.close()  # close input file, we are now done with it
 
     # Create a fake domain-like string for constructing URL-like identifiers such as Message-ID
-    fakedomain = conv['service'].lower() + '.adium.invalid'
+    fakedomain = conv.service.lower() + '.adium.invalid'
 
     # Create a base message object of type multipart/mixed
     msg_base = MIMEMultipart('mixed')
