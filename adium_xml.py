@@ -1,17 +1,18 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -i
 # Utility functions for processing Adium XML-based log files
 
 import sys
+import os
 import logging
 import dateutil.parser
 import xml.etree.ElementTree as ET  # change from lxml to xml
+import copy
 
 import conversation
 
 
 def toconv(infile):
-    """Take a file-like input object and parse to produce a Conversation object"""
-    conv = conversation.Conversation()  # instantiate Conversation object
+    """Take a file-like input object containing an XML chat log, and parse to produce a Conversation object"""
 
     dom = ET.parse(infile)  # parse the input file and get back ElementTree
     logging.debug('Input parsed to: ' + str(dom))
@@ -22,31 +23,58 @@ def toconv(infile):
     xmlns = get_xmlns(root)  # Get the XML namespace, if there is one (usually is)
     logging.debug('XML Namespace is: ' + xmlns)
 
+    conv = conversation.Conversation()  # instantiate Conversation object
+    conv.origfilename = os.path.basename(infile.name)  # Determine name of input file and store for future reference
+
     conv.set_service(root.attrib['service'])  # set the service (AIM, MSN, etc.)
     logging.debug('IM service is ' + conv.service)
 
+    conv.set_account(root.attrib['account'])
+    logging.debug('IM service account is: ' + conv.account)
+
     for e in root.iter():  # iterate over all child elements of the root
         if e.tag == xmlns + 'event':  # Handle <event... />
-            logging.debug('Event found, type is ' + e.attrib['type'])
+            #logging.debug('Event found, type is ' + e.attrib['type'])
             msg = conversation.Message('event')
             msg.date = dateutil.parser.parse(e.attrib['time'])
+            msg.msgfrom = e.attrib['sender']
+            conv.add_participant(e.attrib['sender'])
             if e.attrib['type'] == "windowOpened":
                 msg.text = 'Window opened by ' + e.attrib['sender']
             if e.attrib['type'] == 'windowClosed':
                 msg.text = 'Window closed by ' + e.attrib['sender']
             conv.add_message(msg)
-        if e.tag == xmlns + 'message':  # Handle <message>
-            logging.debug('Message found')
+        elif e.tag == xmlns + 'status':  # Handle <status... />
+            #logging.debug('Status found, type is ' + e.attrib['type'])
+            msg = conversation.Message('event')
+            msg.date = dateutil.parser.parse(e.attrib['time'])
+            msg.msgfrom = e.attrib['sender']
+            conv.add_participant(e.attrib['sender'])
+            if e.attrib['type'] == "offline":
+                msg.text = 'User ' + e.attrib['sender'] + ' is now offline.'
+            if e.attrib['type'] == "online":
+                msg.text = 'User ' + e.attrib['sender'] + ' is now online.'
+            conv.add_message(msg)
+        elif e.tag == xmlns + 'message':  # Handle <message>
+            #logging.debug('Message found')
             msg = conversation.Message('message')
             msg.date = dateutil.parser.parse(e.attrib['time'])
-            for child in e:
-                msg.text += ET.tostring(child, encoding='unicode')  # TODO this leaves messy XML namespace stuff...
+            msg.msgfrom = e.attrib['sender']
+            conv.add_participant(e.attrib['sender'])
+            for t in e.itertext():  # Get the text of all child elements and concat into msg.text
+                msg.text += t
             logging.debug('Message text is: ' + msg.text)
+            for c in e.iter():  # Inspect all sub-elements of <message> recursively
+                c.tag = c.tag.rpartition('}')[-1]  # strip namespace from HTML elements
+                msg.html = ET.tostring(c, encoding='unicode')
+            logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
+        # TODO handle attachments if found?
     return conv
 
 
 def get_xmlns(e):
+    """Determine XML namespace of supplied Element."""
     if e.tag[0] == "{":
         uri, ignore, tag = e.tag[1:].partition("}")
     else:
@@ -54,46 +82,9 @@ def get_xmlns(e):
     return '{' + uri + '}'
 
 
-def getstartdate(dom):
-    """Parse XML log and determine date.  Returns a datetime object."""
-    # Determine log time
-    if len(dom.xpath('//@time')) == 0:
-        raise ValueError("Log does not appear to contain any timestamps!")
-    times = dom.xpath('//@time')  # should return a list
-    try:
-        # We can't use datetime.datetime.strptime() here due to timezone, have to use dateutil
-        d = dateutil.parser.parse(times[0])
-    except ValueError:
-        # if first time won't parse, try the one after that, then give up
-        d = dateutil.parser.parse(times[1])
-    return d
-
-
-def getenddate(dom):
-    """Parse XML log and determine date.  Returns a datetime object."""
-    # Determine log time
-    if len(dom.xpath('//@time')) == 0:
-        raise ValueError("Log does not appear to contain any timestamps!")
-    times = dom.xpath('//@time')  # should return a list
-    try:
-        # We can't use datetime.datetime.strptime() here due to timezone, have to use dateutil
-        d = dateutil.parser.parse(times[-1])
-    except ValueError:
-        # if last time won't parse, try the one before that, then give up
-        d = dateutil.parser.parse(times[-2])
-    return d
-
-
-def getaccount(dom):
-    """Determine IM account used for 'From' field (local end of log)"""
-    if len(dom.xpath('//@account')) == 0:
-        raise ValueError("Log does not appear to contain an 'account' element!")
-    return dom.xpath('//@account')[0]
-
-
 if __name__ == "__main__":  # for test/debug purposes
     logging.basicConfig(level=logging.DEBUG)
     with open(sys.argv[1]) as fo:
-        input = fo
-        conv = toconv(input)
+        conv = toconv(fo)
         print(conv)
+        print(conv.__dir__())
