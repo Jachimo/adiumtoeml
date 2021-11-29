@@ -22,7 +22,7 @@ css = '''<style type = text/css>
 # Nonroutable domain (or domain you own) to use in constructing URL-like objects
 #  DO NOT USE AN ACTUAL DOMAIN YOU DO NOT OWN/CONTROL
 #  Default is 'imservice.improgram.invalid' e.g. 'aim.adium.invalid'
-domain: str = '.adium.invalid'
+domain: str = 'adium.invalid'
 
 
 def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
@@ -34,7 +34,10 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
     msg_texts = MIMEMultipart('alternative')
 
     # Create a fake domain-like string for constructing URL-like identifiers such as Message-ID
-    fakedomain = conv.service.lower() + domain
+    if conv.service:
+        fakedomain = conv.service.lower() + '.' + domain
+    else:
+        fakedomain = domain
 
     # Set From and To using the participants list (makes emails seem directional)
     #  If there are real names associated with userids, we include them, but if not we just use userids
@@ -151,8 +154,8 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                         msg_base.attach(attachment_part)  # attach to the top-level object, multipart/related
             line.append('</p>')
             html_lines.append(''.join(line))
-        html_lines.append('</body>')
-        html_lines.append('</html>')
+    html_lines.append('</body>')
+    html_lines.append('</html>')
     mimehtml = MIMEText('\n'.join(html_lines), 'html')  # TODO might need to fix encoding to prevent BASE64ing of UTF8
     msg_texts.attach(mimehtml)  # Attach the html component as second half of (multipart/related)
 

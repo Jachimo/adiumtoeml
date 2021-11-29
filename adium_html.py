@@ -24,11 +24,21 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     conv.origfilename = filename  # Set it on the Conversation object for future reference
 
     # Parse the first line of the input file for start date
-    conv.startdate = getdate(fi.readline(), filename)  # Only start date is set
+    conv.startdate = get_filename_date(fi.readline(), filename)  # Only start date is set
 
+    # Get all participants and add them to the Conversation
     participants = getparticipants(fi)
     for p in participants:
         conv.add_participant(p.strip())
+
+    # If possible, determine the IM service based on the grandparent folder name
+    #  /path/to/Adium Logs/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
+    filepathlist = os.path.realpath(fi.name).split(os.path.sep)  # returns a list
+    if filepathlist[-4] == 'Adium Logs':
+        # if the great-grandparent dir is 'Adium Logs' we can *probably* assume we're in the Adium Logs tree
+        if len(filepathlist[-3].split('.')) == 2:  # If we can split grandparent dir into two parts, e.g. AIM.screenname
+            conv.service = filepathlist[-3].split('.')[0]
+            conv.account = filepathlist[-3].split('.')[1]
 
     fi.seek(0)
     for line in fi:
@@ -41,7 +51,7 @@ def toconv(fi: TextIO) -> conversation.Conversation:
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
-        if 'class="send"' in line:  # probably a transmitted message
+        elif 'class="send"' in line:  # probably a transmitted message
             msg = conversation.Message('message')
             logtime = getlinecontent(line, '<span class="timestamp">', '</span>')
             msg.date = make_msg_time(logtime, conv.startdate)
@@ -50,7 +60,7 @@ def toconv(fi: TextIO) -> conversation.Conversation:
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
-        if 'class="status"' in line:  # probably a status message
+        elif 'class="status"' in line:  # probably a status message
             msg = conversation.Message('event')
             logtime = getlinecontent(line, ' (', ')</div>')  # Status msgs use different timestamp format
             msg.date = make_msg_time(logtime, conv.startdate)
@@ -74,17 +84,21 @@ def striphtml(text: str) -> str:
 
 def make_msg_time(logtime: str, convdateobj: datetime.datetime) -> datetime.datetime:
     """Take a time-only string (like '12:01:48 AM') and combine with date from conv.startdate to produce datetime"""
-
     # TODO may not handle logs that cross midnight very well...
     #  May need to do something with timedeltas based on the start of the log to get it right
-    time = datetime.datetime.strptime(logtime, '%I:%M:%S %p')  # format is usually '12:01:48 AM'
+
+    try:
+        time = datetime.datetime.strptime(logtime, '%I:%M:%S %p')  # format is usually '12:01:48 AM'
+    except ValueError:
+        time = datetime.datetime.strptime(logtime, '%H:%M:%S')  # if that doesn't work, try %H:%M:%S
+
     dt = datetime.datetime.combine(convdateobj.date(), time.time())
 
     mytz = pytz.timezone(localtz)  # set the log's timezone at the top of this file
     return mytz.localize(dt)
 
 
-def getdate(line: str, filename: str) -> datetime.datetime:
+def get_filename_date(line: str, filename: str) -> datetime.datetime:
     """Determine the date and time of an old-style Adium log, using a single
     line (typically the first), and the filename.
     """

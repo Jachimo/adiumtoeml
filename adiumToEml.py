@@ -73,19 +73,10 @@ def main() -> int:
         logging.debug('XML chat log detected based on file extension.')
         conv = adium_xml.toconv(fi)
 
-    # Older logs are HTML "tag soup" (basically just HTML <body> contents)
-    # TODO this section is very poorly tested...
+    # Older logs are HTML "tag soup" (basically just HTML <body> contents), 1 msg per line
     if os.path.splitext(args.infilename)[-1] in ['.AdiumHTMLLog', '.html']:
         logging.debug('HTML chat log detected based on file extension.')
-        try:
-            header = open(os.path.join(args.configdir, 'header.htmlpart'), 'r')
-            footer = open(os.path.join(args.configdir, 'footer.htmlpart'), 'r')
-        except IOError:
-            logging.critical('I/O Error while attempting to open header or footer file.')
-            return 1
-        conv = adium_html.toconv(fi, header, footer)
-        header.close()
-        footer.close()
+        conv = adium_html.toconv(fi)
 
     fi.close()  # close input file, we are now done with it
 
