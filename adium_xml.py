@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -i
+#!/usr/bin/env python3
 # Utility functions for processing Adium XML-based log files
 
 import sys
@@ -7,11 +7,12 @@ import logging
 import dateutil.parser
 import xml.etree.ElementTree as ET  # change from lxml to xml
 import copy
+from typing import TextIO
 
 import conversation
 
 
-def toconv(infile):
+def toconv(infile: TextIO) -> conversation.Conversation:
     """Take a file-like input object containing an XML chat log, and parse to produce a Conversation object"""
 
     dom = ET.parse(infile)  # parse the input file and get back ElementTree

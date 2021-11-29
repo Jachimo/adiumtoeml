@@ -16,16 +16,13 @@ from email.mime.text import MIMEText
 import pytz
 import hashlib
 
+import conversation  # data model
 import adium_xml  # for newer XML based .chatlog files
 import adium_html  # for older HTML based .AdiumHTMLLog files
-import conversation
-import conv_to_eml
+import conv_to_eml  # for output as MIME .eml file/message
 
 
-localtz: str = 'America/New_York'
-
-
-def main():
+def main() -> int:
     logging.basicConfig(level=logging.DEBUG)  # change level for desired verbosity: DEBUG, INFO, WARNING, ERROR, etc.
 
     # Parse arguments (see https://docs.python.org/3/library/argparse.html)
@@ -107,7 +104,7 @@ def main():
     fo.write(eml.as_string())  # Write out the message
     logging.debug('Finished writing ' + outpath)
     fo.close()
-    logging.info('DONE: ' + args.infilename + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
+    print(args.infilename + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
 
     return 0  # exit successfully
 

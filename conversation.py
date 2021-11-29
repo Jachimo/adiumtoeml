@@ -76,14 +76,16 @@ class Participant:
 class Message:
     """Represents a single message sent by one Participant to another in a Conversation"""
     def __init__(self, type):
-        self.type: str = type  # when instantiating message, give it a type
+        self.type: str = type  # types: 'message' or 'event'
         self.guid: str = ''
         self.msgfrom: str = ''
         self.msgto: str = ''
         self.date: datetime = ''
         self.text: str = ''  # text version of the message
-        self.textfont: str = ''  # font to display text version (if no HTML provided)
-        self.textsize: str = ''  # size to display text version (if no HTML provided)
+        self.textfont: str = ''  # font to display text version
+        self.textsize: str = ''  # size to display text version
+        self.textcolor: str = ''  # color to display text version
+        self.bgcolor: str = ''  # background/highlight color to display text version
         self.html: str = ''  # HTML version of the message
         self.attachments: list = []  # List of Attachment objects (optional)
 
@@ -104,10 +106,15 @@ class Attachment:
     def __init__(self):
         self.name: str = ''
         self.data = b''
-        self.contentid = ''
-        self.mimetype = ''
+        self.contentid: str = ''
+        self.mimetype: str = ''
 
     def gen_contentid(self):
         """Generate a contentID hash from the attachment data, should be called after attachment payload changed"""
         # We want the ContentID to be deterministic based on content, not random (for dupe checking/filtering)
         self.contentid = hashlib.md5(self.data).hexdigest()
+
+    def set_payload(self, bindata):
+        """Set the binary payload of the attachment"""
+        self.data = bindata
+        self.gen_contentid()

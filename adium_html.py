@@ -3,12 +3,14 @@
 import logging
 import datetime
 import os
+import pytz
 from typing import TextIO
 
 import conversation
 
 
-doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n'
+doctype: str = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n'
+localtz: str = 'America/New_York'  # timezone that chat logs were created in (since no tz in HTML logs)
 
 
 def toconv(fi: TextIO) -> conversation.Conversation:
@@ -28,37 +30,37 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     for p in participants:
         conv.add_participant(p.strip())
 
-    # THE OLD WAY: Generate a complete HTML document by slamming all the parts together
-    #conv.html = doctype + header.read() + fi.seek(0).read() + footer.read() + '\n'
-
-    # THE NEW WAY: Actually step through lines and generate Message objects
     fi.seek(0)
     for line in fi:
         if 'class="receive"' in line:  # probably a received message
             msg = conversation.Message('message')  # Create Message object
             logtime = getlinecontent(line, '<span class="timestamp">', '</span>')  # note this is time ONLY
-            msg.date = makemsgtimefromlogtime(logtime, conv.startdate)  # create datetime object for message
+            msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
             msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
+            conv.add_message(msg)
         if 'class="send"' in line:  # probably a transmitted message
             msg = conversation.Message('message')
             logtime = getlinecontent(line, '<span class="timestamp">', '</span>')
-            msg.date = makemsgtimefromlogtime(logtime, conv.startdate)
+            msg.date = make_msg_time(logtime, conv.startdate)
             msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
+            conv.add_message(msg)
         if 'class="status"' in line:  # probably a status message
             msg = conversation.Message('event')
             logtime = getlinecontent(line, ' (', ')</div>')  # Status msgs use different timestamp format
-            msg.date = makemsgtimefromlogtime(logtime, conv.startdate)
+            msg.date = make_msg_time(logtime, conv.startdate)
             msg.msgfrom = 'System Message'
             msg.html = getlinecontent(line, '<div class="status">', ' (')
             msg.text = msg.html  # No HTML tags in status message text
-        # Handle attachments?
-        conv.add_message(msg)
+            conv.add_message(msg)
+        # TODO Handle attachments?
+        else:
+            logging.info('Unknown line encountered: ' + line)
     return conv
 
 
@@ -70,12 +72,16 @@ def striphtml(text: str) -> str:
     return re.sub(clean, '', text)
 
 
-def makemsgtimefromlogtime(logtime: str, convdateobj: datetime.datetime) -> datetime.datetime:
+def make_msg_time(logtime: str, convdateobj: datetime.datetime) -> datetime.datetime:
     """Take a time-only string (like '12:01:48 AM') and combine with date from conv.startdate to produce datetime"""
-    # TODO may not handle logs that cross midnight very well, check and correct; maybe timedelta needed?
+
+    # TODO may not handle logs that cross midnight very well...
+    #  May need to do something with timedeltas based on the start of the log to get it right
     time = datetime.datetime.strptime(logtime, '%I:%M:%S %p')  # format is usually '12:01:48 AM'
     dt = datetime.datetime.combine(convdateobj.date(), time.time())
-    return dt
+
+    mytz = pytz.timezone(localtz)  # set the log's timezone at the top of this file
+    return mytz.localize(dt)
 
 
 def getdate(line: str, filename: str) -> datetime.datetime:
@@ -103,7 +109,10 @@ def getdate(line: str, filename: str) -> datetime.datetime:
         except ValueError:
             # if that doesnt work either, try a 3rd time, this time without AM/PM flag
             d = datetime.datetime.strptime(logdate + ' ' + logtime, '%Y-%m-%d %H:%M:%S')
-    return d
+
+    # Last but not least, set the timezone as we return the datetime object
+    mytz = pytz.timezone(localtz)  # set the log's timezone at the top of this file
+    return mytz.localize(d)
 
 
 def getparticipants(fi: TextIO) -> list:
