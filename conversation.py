@@ -15,8 +15,8 @@ class Conversation:
         self.participants: list = []  # List of Participant objects
         self.startdate: datetime = False
         self.enddate: datetime = False
-        self.messages: list = []
-        self.hasattachments: bool = False
+        self.messages: list = []  # List of Message objects
+        self.hasattachments: bool = False  # Flag to indicate that 1 or more message contains an attachment
 
     def add_participant(self, userid):
         if userid not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
@@ -84,8 +84,8 @@ class Message:
         self.text: str = ''  # text version of the message
         self.textfont: str = ''  # font to display text version (if no HTML provided)
         self.textsize: str = ''  # size to display text version (if no HTML provided)
-        self.html: str = ''
-        self.attachments: list = []
+        self.html: str = ''  # HTML version of the message
+        self.attachments: list = []  # List of Attachment objects (optional)
 
     def __eq__(self, other):
         """Define equality for purposes of sorting"""
