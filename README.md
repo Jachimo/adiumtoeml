@@ -13,11 +13,9 @@ If `outputdir` is not specified, the working directory will be used instead.
 
 In most cases, you would probably want to call this from a wrapper script, e.g. with `find` and `xargs` in order to run it on a bunch of logfiles.
 
-For old-style (`.AdiumHTMLLog`) files, the directory containing the script must contain a header and footer file, "header.htmlpart" and "footer.htmlpart", which are prepended and appended to the log in order to make it into a complete HTML document.
+Requires Python 3 and both the "dateutil" package, available through pip.
 
-For XML logs produced by newer versions of Adium, the directory containing the script must contain an XSL file used to convert from XML to HTML, which should be named "chatlog_transform.xsl".
-
-Requires Python 3 and both the "lxml" and "dateutil" packages, available through pip.
+Written and tested using Python 3.7.1.
 
 ### Options
 
