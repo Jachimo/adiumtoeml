@@ -43,5 +43,5 @@
 <message sender="mysn" time="2007-03-25T14:26:24-04:00"><div><span style="font-family: Helvetica; font-size: 12pt;">ttyl</span></div></message>
 <message sender="theirsn" time="2007-03-25T14:26:26-04:00"><div><span style="color: #f27e0b; font-family: Verdana; font-size: 10pt; font-weight: bold;">seeya</span></div></message>
 <status type="offline" sender="theirsn" time="2007-03-25T14:26:30-04:00"/>
-<event type="windowClosed" sender="mysn" time="2007-03-25T12:31:28-04:00"/>
+<event type="windowClosed" sender="mysn" time="2007-03-25T14:30:02-04:00"/>
 </chat>
