@@ -6,7 +6,6 @@ import os
 import logging
 import dateutil.parser
 import xml.etree.ElementTree as ET  # change from lxml to xml
-import copy
 from typing import TextIO
 
 import conversation

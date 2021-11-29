@@ -1,3 +1,5 @@
+# Convert a Conversation object (see conversation.py) to an email.mime.multipart object
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase

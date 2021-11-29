@@ -5,6 +5,7 @@ import datetime
 import os
 import pytz
 from typing import TextIO
+import re
 
 import conversation
 
@@ -77,7 +78,6 @@ def toconv(fi: TextIO) -> conversation.Conversation:
 def striphtml(text: str) -> str:
     """Remove html tags from a string"""
     # See https://medium.com/@jorlugaqui/how-to-strip-html-tags-from-a-string-in-python-7cb81a2bbf44
-    import re
     clean = re.compile('<.*?>')  # For better performance
     return re.sub(clean, '', text)
 

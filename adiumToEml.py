@@ -8,13 +8,8 @@
 
 import sys
 import logging
-import datetime
 import os
 import argparse
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import pytz
-import hashlib
 
 import conversation  # data model
 import adium_xml  # for newer XML based .chatlog files
@@ -43,7 +38,6 @@ def main() -> int:
     if os.path.splitext(args.infilename)[-1] not in ['.chatlog', '.xml', '.AdiumHTMLLog', '.html']:
         logging.critical("Input file suffix not one of the supported types.")
         return 1
-
     if not os.path.isdir(args.outdirname):
         logging.critical("Output dir (" + args.outdirname + ") specified but not a directory.")
         return 1
@@ -68,7 +62,7 @@ def main() -> int:
         logging.critical("I/O Error while opening input: " + args.infilename)
         return 1
     
-    # Newer Adium logs are XML (See https://trac.adium.im/wiki/XMLLogFormat)
+    # Newer Adium logs are XML
     if os.path.splitext(args.infilename)[-1] in ['.chatlog', '.xml']:
         logging.debug('XML chat log detected based on file extension.')
         conv = adium_xml.toconv(fi)
