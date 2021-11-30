@@ -36,11 +36,12 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
 
     # Set From and To using the participants list (makes emails seem directional)
     #  If there are real names associated with userids, we include them, but if not we just use userids
+    #  Also, if the userid contains an '@', munge it to '[at]' to avoid choking MUA with two '@' symbols in From/To
     if conv.participants[0].realname and conv.participants[1].realname:
         msg_base['From'] = ('"' + conv.participants[0].realname + '" ' 
-                            + '<' + conv.participants[0].userid + '@' + fakedomain + '>')
+                            + '<' + conv.participants[0].userid.replace('@', '[at]') + '@' + fakedomain + '>')
         msg_base['To'] = ('"' + conv.participants[1].realname + '" ' 
-                          + '<' + conv.participants[1].userid + '@' + fakedomain + '>')
+                          + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
     else:
         msg_base['From'] = ('"' + conv.participants[0].userid + '" ' 
                             + '<' + conv.participants[0].userid.replace('@', '[at]') + '@' + fakedomain + '>')
@@ -48,14 +49,15 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                           + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
 
     # If the Conversation has startdate set (from filename) we use it, otherwise use oldest Message date
+    # Construct the Subject line in a similar way, using parsed date if it exists
     if conv.startdate:
         msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Subject'] = ('Chat with ' + conv.origfilename.split(' (')[0] + ' on '
+                               + conv.startdate.strftime('%a, %d %b %Y at %T'))
     else:
         msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
-
-    # Construct the Subject line from the file name, but cleaned up slightly
-    msg_base['Subject'] = ('Chat with ' + conv.origfilename.split(' (')[0] + ' on '
-                           + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
+        msg_base['Subject'] = ('Chat with ' + conv.origfilename.split(' (')[0] + ' on '
+                               + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
 
     # produce a text version of the messages
     text_lines = []
