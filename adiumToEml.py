@@ -5,13 +5,11 @@
     For usage, run with the -h option.
 """
 
-
 import sys
 import logging
 import os
 import argparse
 
-import conversation  # data model
 import adium_xml  # for newer XML based .chatlog files
 import adium_html  # for older HTML based .AdiumHTMLLog files
 import conv_to_eml  # for output as MIME .eml file/message
@@ -23,7 +21,8 @@ def main() -> int:
     # Parse arguments (see https://docs.python.org/3/library/argparse.html)
     parser = argparse.ArgumentParser(description='Convert Adium log files to RFC822 MIME text files (.eml)')
     parser.add_argument('infilename', help='Input file')
-    parser.add_argument('outdirname', nargs='?', default=os.getcwd(), help='Output directory (optional, defaults to cwd)')
+    parser.add_argument('outdirname', nargs='?', default=os.getcwd(),
+                        help='Output directory (optional, defaults to cwd)')
     parser.add_argument('--clobber', action='store_true', help='Overwrite identically-named output files')
     parser.add_argument('--configdir', help='Location of support files')
     parser.add_argument('--xslfile', help='Name of XSL file to use for transform (within config dir)')
@@ -44,7 +43,7 @@ def main() -> int:
 
     outfilename = os.path.splitext(os.path.basename(args.infilename))[0] + '.eml'  # .mht or .mhtml also valid
     outpath = os.path.join(args.outdirname, outfilename)
-    
+
     # Test to see if a file already exists with that name and stop if so
     # In some cases this may be undesirable/annoying so we can disable with flag --clobber
     if os.path.isfile(outpath):
@@ -56,12 +55,12 @@ def main() -> int:
 
     # Open input file
     try:
-        fi = open(args.infilename, 'r')   # fi is a file object
+        fi = open(args.infilename, 'r')  # fi is a file object
         logging.debug('Opened ' + args.infilename + ' for reading.')
     except IOError:
         logging.critical("I/O Error while opening input: " + args.infilename)
         return 1
-    
+
     # Newer Adium logs are XML
     if os.path.splitext(args.infilename)[-1] in ['.chatlog', '.xml']:
         logging.debug('XML chat log detected based on file extension.')
