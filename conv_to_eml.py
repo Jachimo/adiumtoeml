@@ -48,15 +48,18 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
         msg_base['To'] = ('"' + conv.participants[1].userid + '" ' 
                           + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
 
-    # If the Conversation has startdate set (from filename) we use it, otherwise use oldest Message date
-    # Construct the Subject line in a similar way, using parsed date if it exists
-    if conv.startdate:
+    # Construct the Date and Subject headers, based on the information we have available in Conversation
+    if conv.startdate and conv.service:
         msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
-        msg_base['Subject'] = ('Chat with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.startdate.strftime('%a, %d %b %Y at %T'))
+        msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
+                               + conv.startdate.strftime('%a, %d %b %Y'))
+    elif conv.startdate:
+        msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
+                               + conv.startdate.strftime('%a, %d %b %Y'))
     else:
-        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
-        msg_base['Subject'] = ('Chat with ' + conv.origfilename.split(' (')[0] + ' on '
+        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
 
     # produce a text version of the messages
