@@ -13,9 +13,7 @@ In most cases, you would probably want to call this from a wrapper script, e.g. 
 
 Most Adium logs end in either `.AdiumHTMLLog` or `.chatlog`, although the tool will also process files ending in `.html` or `.xml`, in case you want to edit either type of file by hand in an external editor.
 
-Requires Python 3 and both the "dateutil" package, available through pip.
-
-Written and tested using Python 3.7.1.
+Written and tested using Python 3.9.
 
 ### Required Libraries / Packages
 
