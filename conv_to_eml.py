@@ -49,15 +49,19 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                           + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
 
     # Construct the Date and Subject headers, based on the information we have available in Conversation
-    if conv.startdate and conv.service:
+    if conv.startdate and conv.service:  # if we have startdate AND service...
         msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
         msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.startdate.strftime('%a, %d %b %Y'))
-    elif conv.startdate:
+    elif conv.startdate and (not conv.service):  # if we have ONLY the startdate but NOT the service identifier...
         msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
         msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.startdate.strftime('%a, %d %b %Y'))
-    else:
+    elif (not conv.startdate) and conv.service:  # if we have ONLY the service identifier and NOT the startdate...
+        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
+                               + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
+    else:  # if we have neither one...
         msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
         msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
@@ -79,7 +83,7 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
             line_parts.append(msg.text)
             text_lines.append(' '.join(line_parts))
     mimetext = MIMEText('\n'.join(text_lines), 'text')
-    msg_texts.attach(mimetext)  # Attach the plaintext component as one part of (multipart/related)
+    msg_texts.attach(mimetext)  # Attach the plaintext component as one part of (multipart/alternative)
 
     # Construct html_lines the same way to produce HTML version
     html_lines = []
@@ -156,8 +160,8 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
             html_lines.append(''.join(line))
     html_lines.append('</body>')
     html_lines.append('</html>')
-    mimehtml = MIMEText('\n'.join(html_lines), 'html')  # TODO might need to fix encoding to prevent BASE64ing of UTF8
-    msg_texts.attach(mimehtml)  # Attach the html component as second half of (multipart/related)
+    mimehtml = MIMEText('\n'.join(html_lines), 'html')
+    msg_texts.attach(mimehtml)  # Attach the html component as second half of (multipart/alternative)
 
     # The References header is a hash of the sorted participants list, allowing MUA to thread Conversations together
     msg_base['References'] = ('<' + hashlib.md5(
