@@ -178,6 +178,7 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
 
     # Set additional headers (comment out if not desired)
     msg_base['X-Converted-On'] = datetime.datetime.now().strftime('%a, %d %b %Y %T %z')
+    msg_base['X-Original-Filename'] = conv.origfilename
 
     # Attach the (multipart/related) component to the root
     msg_base.attach(msg_texts)
