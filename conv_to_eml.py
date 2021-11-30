@@ -50,9 +50,9 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                           + '<' + conv.participants[1].userid + '@' + fakedomain + '>')
     else:
         msg_base['From'] = ('"' + conv.participants[0].userid + '" ' 
-                            + '<' + conv.participants[0].userid + '@' + fakedomain + '>')
+                            + '<' + conv.participants[0].userid.replace('@', '[at]') + '@' + fakedomain + '>')
         msg_base['To'] = ('"' + conv.participants[1].userid + '" ' 
-                          + '<' + conv.participants[1].userid + '@' + fakedomain + '>')
+                          + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
 
     # If the Conversation has startdate set (from filename) we use it, otherwise use oldest Message date
     if conv.startdate:

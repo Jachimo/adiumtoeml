@@ -8,7 +8,7 @@ from typing import TextIO
 import re
 
 import conversation
-
+from conversation import Conversation
 
 doctype: str = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n'
 localtz: str = 'America/New_York'  # timezone that chat logs were created in (since no tz in HTML logs)
@@ -19,7 +19,7 @@ def toconv(fi: TextIO) -> conversation.Conversation:
 
     header and footer are files containing the pre-<body> and post-<body> sections of HTML document
     """
-    conv = conversation.Conversation()
+    conv: Conversation = conversation.Conversation()
 
     filename = os.path.basename(fi.name)  # Determine basename of input file from file object
     conv.origfilename = filename  # Set it on the Conversation object for future reference
@@ -37,9 +37,8 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     filepathlist = os.path.realpath(fi.name).split(os.path.sep)  # returns a list
     if filepathlist[-4] == 'Adium Logs':
         # if the great-grandparent dir is 'Adium Logs' we can *probably* assume we're in the Adium Logs tree
-        if len(filepathlist[-3].split('.')) == 2:  # If we can split grandparent dir into two parts, e.g. AIM.screenname
-            conv.service = filepathlist[-3].split('.')[0]
-            conv.account = filepathlist[-3].split('.')[1]
+        conv.service = filepathlist[-3].split('.', 1)[0]
+        conv.account = filepathlist[-3].split('.', 1)[1]
 
     fi.seek(0)
     for line in fi:
