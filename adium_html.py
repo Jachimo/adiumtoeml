@@ -27,16 +27,12 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     # Parse the first line of the input file for start date
     conv.startdate = get_filename_date(fi.readline(), filename)  # Only start date is set
 
-    # Get all participants and add them to the Conversation
-    participants = getparticipants(fi)
-    for p in participants:
-        conv.add_participant(p.strip())
-
-    # If possible, determine the IM service based on the grandparent folder name
+    # If possible, determine the IM service based on the grandparent folder name if hierarchy is either:
     #  /path/to/Adium Logs/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
+    #  /path/to/Adium/Logs*/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
     filepathlist = os.path.realpath(fi.name).split(os.path.sep)  # returns a list
-    if filepathlist[-4] == 'Adium Logs':
-        # if the great-grandparent dir is 'Adium Logs' we can *probably* assume we're in the Adium Logs tree
+    if (filepathlist[-4] == 'Adium Logs') or (filepathlist[-4].find('Logs') == 0 and filepathlist[-5] == 'Adium'):
+        # We can *probably* assume we're in the Adium Logs tree...
         conv.service = filepathlist[-3].split('.', 1)[0]
         conv.account = filepathlist[-3].split('.', 1)[1]
 

@@ -119,9 +119,13 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                 line.append('(' + message.date.strftime('%r') + ')&nbsp;')
                 line.append('</span>')
             if message.msgfrom:
-                line.append('<span class="screenname">')
+                if conv.userid_islocal(message.msgfrom):
+                    line.append('<span class="localscreenname">')  # if from the local user, class it appropriately
+                else:
+                    line.append('<span class="screenname">')  # otherwise, generic screenname (likely remote)
                 line.append(message.msgfrom + ':&ensp;')
                 line.append('</span>')
+
             if message.html:
                 # If message exists as HTML, pass it through
                 line.append('<span class="message_text">')
@@ -130,7 +134,7 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
             elif message.text:
                 # If there's no HTML provided, create it from text and any styling information provided
                 line.append('<span')
-                if (message.textfont) or (message.textsize) or (message.textcolor) or (message.bgcolor):
+                if message.textfont or message.textsize or message.textcolor or message.bgcolor:
                     # only if needed, we add a style attribute to the message text...
                     line.append(' style="')
                     if message.textfont:
@@ -152,15 +156,15 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
                     if att.data:
                         attachment_part = MIMEBase('application', att.mimetype.split('/')[-1])
                         attachment_part.set_payload(att.data)
-                        email.encoders.encode_base64(attachment_part)  # BASE64 for attachments (still needed as of 2021)
+                        email.encoders.encode_base64(attachment_part)  # BASE64 for attachments (ugh)
                         attachment_part.add_header('Content-Disposition', 'attachment', filename=att.name)
                         attachment_part['Content-ID'] = '<' + att.contentid + '>'
                         msg_base.attach(attachment_part)  # attach to the top-level object, multipart/related
             line.append('</p>')
-            html_lines.append(''.join(line))
+            html_lines.append(''.join(line))  # join line components without spaces
     html_lines.append('</body>')
     html_lines.append('</html>')
-    mimehtml = MIMEText('\n'.join(html_lines), 'html')
+    mimehtml = MIMEText('\n'.join(html_lines), 'html')  # join lines with \n chars
     msg_texts.attach(mimehtml)  # Attach the html component as second half of (multipart/alternative)
 
     # The References header is a hash of the sorted participants list, allowing MUA to thread Conversations together

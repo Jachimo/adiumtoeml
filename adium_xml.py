@@ -34,7 +34,6 @@ def toconv(infile: TextIO) -> conversation.Conversation:
 
     for e in root.iter():  # iterate over all child elements of the root
         if e.tag == xmlns + 'event':  # Handle <event... />
-            #logging.debug('Event found, type is ' + e.attrib['type'])
             msg = conversation.Message('event')
             msg.date = dateutil.parser.parse(e.attrib['time'])
             msg.msgfrom = e.attrib['sender']
@@ -44,7 +43,6 @@ def toconv(infile: TextIO) -> conversation.Conversation:
                 msg.text = 'Window closed by ' + e.attrib['sender']
             conv.add_message(msg)
         elif e.tag == xmlns + 'status':  # Handle <status... />
-            #logging.debug('Status found, type is ' + e.attrib['type'])
             msg = conversation.Message('event')
             msg.date = dateutil.parser.parse(e.attrib['time'])
             msg.msgfrom = e.attrib['sender']
@@ -54,7 +52,6 @@ def toconv(infile: TextIO) -> conversation.Conversation:
                 msg.text = 'User ' + e.attrib['sender'] + ' is now online.'
             conv.add_message(msg)
         elif e.tag == xmlns + 'message':  # Handle <message>
-            #logging.debug('Message found')
             msg = conversation.Message('message')
             msg.date = dateutil.parser.parse(e.attrib['time'])
             msg.msgfrom = e.attrib['sender']
@@ -68,6 +65,7 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
         # TODO handle attachments if found?
+
     return conv
 
 

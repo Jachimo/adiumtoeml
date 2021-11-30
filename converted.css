@@ -1,6 +1,11 @@
 <style type = text/css>
 .screenname {
   font-weight: bold;
+  color: red;
+}
+.localscreenname {
+  font-weight: bold;
+  color: blue;
 }
 .timestamp {
   font-size: 10pt;

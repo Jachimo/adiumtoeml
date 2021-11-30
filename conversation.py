@@ -11,7 +11,7 @@ class Conversation:
     def __init__(self):
         self.origfilename: str = ''  # Originating file name (where conversation was parsed from)
         self.service: str = ''  # messaging service: AIM, iChat, MSN, etc.
-        self.account: str = ''  # local account that was used when log was created
+        self.account: str = ''  # userid of local IM account (set BEFORE populating participants list!)
         self.participants: list = []  # List of Participant objects
         self.startdate: datetime = False
         self.enddate: datetime = False
@@ -19,9 +19,11 @@ class Conversation:
         self.hasattachments: bool = False  # Flag to indicate that 1 or more message contains an attachment
 
     def add_participant(self, userid):
-        if userid not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
-            p = Participant(userid)
+        if userid.lower() not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
+            p = Participant(userid.lower())
             self.participants.append(p)
+        if userid.lower() == self.account.lower():  # if the userid we are adding is the local account, mark it as such
+            self.set_local_account(userid.lower())
 
     def listparticipantuserids(self):
         userids = []
@@ -31,19 +33,18 @@ class Conversation:
 
     def add_realname_to_userid(self, userid, realname):
         for p in self.participants:
-            if p.userid == userid:
+            if p.userid.lower() == userid.lower():
                 p.realname = realname
 
     def add_systemid_to_userid(self, userid, systemid):
         for p in self.participants:
-            if p.userid == userid:
+            if p.userid.lower() == userid.lower():
                 p.systemid = systemid
 
     def set_account(self, account):
-        self.account = account
+        self.account = account.lower()
 
     def set_service(self, service):
-        # May want to lowercase or validate against list of services?
         self.service = service
 
     def add_message(self, message):
@@ -64,6 +65,22 @@ class Conversation:
             raise
             #return False
 
+    def set_local_account(self, userid):
+        for p in self.participants:
+            if p.userid.lower() == userid.lower():
+                p.position = 'local'
+
+    def set_remote_account(self, userid):
+        for p in self.participants:
+            if p.userid.lower() == userid.lower():
+                p.position = 'remote'
+
+    def userid_islocal(self, userid):
+        for p in self.participants:
+            if (p.userid.lower() == userid.lower()) and (p.position == 'local'):
+                return True
+        return False
+
 
 class Participant:
     """Represents a single participant in a conversation; conversations may have 1 to many participants"""
@@ -71,6 +88,7 @@ class Participant:
         self.userid: str = userid
         self.realname: str = ''
         self.systemid: str = ''
+        self.position: str = ''  # either 'local' or 'remote'
 
 
 class Message:
