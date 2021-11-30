@@ -38,7 +38,6 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg = conversation.Message('event')
             msg.date = dateutil.parser.parse(e.attrib['time'])
             msg.msgfrom = e.attrib['sender']
-            conv.add_participant(e.attrib['sender'])
             if e.attrib['type'] == "windowOpened":
                 msg.text = 'Window opened by ' + e.attrib['sender']
             if e.attrib['type'] == 'windowClosed':
@@ -49,7 +48,6 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg = conversation.Message('event')
             msg.date = dateutil.parser.parse(e.attrib['time'])
             msg.msgfrom = e.attrib['sender']
-            conv.add_participant(e.attrib['sender'])
             if e.attrib['type'] == "offline":
                 msg.text = 'User ' + e.attrib['sender'] + ' is now offline.'
             if e.attrib['type'] == "online":
