@@ -11,15 +11,8 @@ import conversation
 
 
 # CSS for styling the HTML part of the message
-css = '''<style type = text/css>
-.screenname {
-  font-weight: bold; 
-}
-.timestamp {
-  font-size: 10pt;
-  color: grey;
-}
-</style>'''
+with open('converted.css', 'r') as cssfile:
+    css = cssfile.read()
 
 # Nonroutable domain (or domain you own) to use in constructing URL-like objects
 #  DO NOT USE AN ACTUAL DOMAIN YOU DO NOT OWN/CONTROL
