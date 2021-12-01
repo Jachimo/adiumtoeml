@@ -5,7 +5,7 @@ import sys
 import os
 import logging
 import dateutil.parser
-import xml.etree.ElementTree as ET  # change from lxml to xml
+import xml.dom.minidom
 from typing import TextIO
 
 import conversation
@@ -15,59 +15,52 @@ import adium_html
 def toconv(infile: TextIO) -> conversation.Conversation:
     """Take a file-like input object containing an XML chat log, and parse to produce a Conversation object"""
 
-    dom = ET.parse(infile)  # parse the input file and get back ElementTree
-    logging.debug('Input parsed to: ' + str(dom))
+    dom = xml.dom.minidom.parse(infile)
 
-    root = dom.getroot()  # get the root element, which should be <chat>
-    logging.debug('Root element is: ' + str(root))
+    if dom.firstChild.nodeName != 'chat':  # Do some basic sanity-checking on input
+        logging.critical(os.path.basename(infile.name) + ' does not appear to contain <chat> element!')
+        raise ValueError('Malformed or invalid input file')
 
-    xmlns = get_xmlns(root)  # Get the XML namespace, if there is one (usually is)
-    logging.debug('XML Namespace is: ' + xmlns)
+    chat = dom.firstChild  # root element should always be <chat>
 
     conv = conversation.Conversation()  # instantiate Conversation object
-    conv.origfilename = os.path.basename(infile.name)  # Determine name of input file and store for future reference
-
-    conv.set_service(root.attrib['service'])  # set the service (AIM, MSN, etc.)
-    conv.set_account(root.attrib['account'])  # set the local account
+    conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
+    conv.set_service(chat.getAttribute('service'))  # set the service (AIM, MSN, etc.)
+    conv.set_account(chat.getAttribute('account'))  # set the local account
 
     logging.debug('IM service is ' + conv.service)
-    logging.debug('IM service account is: ' + conv.account)
+    logging.debug('Local account is: ' + conv.account)
 
-    for e in root.iter():  # iterate over all child elements of the root
-        if e.tag == xmlns + 'event':  # Handle <event... />
+    for e in chat.childNodes:
+        if (e.nodeName == 'event') or (e.nodeName == 'status'):  # Handle <event... /> and <status... />
             msg = conversation.Message('event')
-            msg.date = dateutil.parser.parse(e.attrib['time'])
-            msg.msgfrom = e.attrib['sender']
-            if e.attrib['type'] == "windowOpened":
-                msg.text = 'Window opened by ' + e.attrib['sender']
-            if e.attrib['type'] == 'windowClosed':
-                msg.text = 'Window closed by ' + e.attrib['sender']
+            msg.date = dateutil.parser.parse(e.getAttribute('time'))
+            msg.msgfrom = e.getAttribute('sender')
+            if e.getAttribute('type') == 'windowOpened':
+                msg.text = 'Window opened by ' + e.getAttribute('sender')
+            if e.getAttribute('type') == 'windowClosed':
+                msg.text = 'Window closed by ' + e.getAttribute('sender')
+            if e.getAttribute('type') == 'offline':
+                msg.text = 'User ' + e.getAttribute('sender') + ' is now offline.'
+            if e.getAttribute('type') == 'online':
+                msg.text = 'User ' + e.getAttribute('sender') + ' is now online.'
             conv.add_message(msg)
-        elif e.tag == xmlns + 'status':  # Handle <status... />
-            msg = conversation.Message('event')
-            msg.date = dateutil.parser.parse(e.attrib['time'])
-            msg.msgfrom = e.attrib['sender']
-            if e.attrib['type'] == "offline":
-                msg.text = 'User ' + e.attrib['sender'] + ' is now offline.'
-            if e.attrib['type'] == "online":
-                msg.text = 'User ' + e.attrib['sender'] + ' is now online.'
-            conv.add_message(msg)
-        elif e.tag == xmlns + 'message':  # Handle <message>
+        elif e.nodeName == 'message':  # Handle <message>
             msg = conversation.Message('message')
-            msg.date = dateutil.parser.parse(e.attrib['time'])
-            msg.msgfrom = e.attrib['sender']
-            conv.add_participant(e.attrib['sender'])
-            for t in e.itertext():  # Get the text of all child elements and concat into msg.text
-                msg.text += t
+            msg.date = dateutil.parser.parse(e.getAttribute('time'))
+            msg.msgfrom = e.getAttribute('sender')
+            conv.add_participant(msg.msgfrom)
+            msg.text = get_inner_text(e)
             logging.debug('Message text is: ' + msg.text)
-            for c in e.iter():  # Inspect all sub-elements of <message> recursively
-                c.tag = c.tag.rpartition('}')[-1]  # strip namespace from HTML elements
-                msg.html = ET.tostring(c, encoding='unicode')
+            if e.firstChild.nodeName == 'div':
+                msg.html = e.firstChild.firstChild.toxml()  # strip outermost <div>
+            else:
+                msg.html = e.firstChild.toxml()
             logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
-        # TODO handle attachments if found?
 
-    if (conv.origfilename.find('(') != -1) and (conv.origfilename.find(')') != -1):  # if filename contains (datestr)
+    # Get date from filename, if present; otherwise use timestamp from first message
+    if (conv.origfilename.find('(') != -1) and (conv.origfilename.find(')') != -1):
         filenamedatestr = adium_html.getlinecontent(conv.origfilename, '(', ')')
         try:
             filenamedate = dateutil.parser.parse(filenamedatestr.replace('.', ':'))
@@ -80,13 +73,16 @@ def toconv(infile: TextIO) -> conversation.Conversation:
     return conv
 
 
-def get_xmlns(e):
-    """Determine XML namespace of supplied Element."""
-    if e.tag[0] == "{":
-        uri, ignore, tag = e.tag[1:].partition("}")
-    else:
-        uri = None
-    return '{' + uri + '}'
+def get_inner_text(node):
+    """Get all text associated with node and its children"""
+    # Thanks to Manlio Perillo on python-list@python.org
+    textlist = ['']
+    for n in node.childNodes:
+        if n.nodeName == '#text':
+            textlist.append(n.data)
+        else:
+            textlist.append(get_inner_text(n))
+    return ''.join(textlist)
 
 
 if __name__ == "__main__":  # for test/debug purposes
@@ -94,4 +90,3 @@ if __name__ == "__main__":  # for test/debug purposes
     with open(sys.argv[1]) as fo:
         conv = toconv(fo)
         print(conv)
-        print(conv.__dir__())
