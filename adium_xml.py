@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET  # change from lxml to xml
 from typing import TextIO
 
 import conversation
+import adium_html
 
 
 def toconv(infile: TextIO) -> conversation.Conversation:
@@ -65,6 +66,16 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
         # TODO handle attachments if found?
+
+    if (conv.origfilename.find('(') != -1) and (conv.origfilename.find(')') != -1):  # if filename contains (datestr)
+        filenamedatestr = adium_html.getlinecontent(conv.origfilename, '(', ')')
+        try:
+            filenamedate = dateutil.parser.parse(filenamedatestr.replace('.', ':'))
+            conv.startdate = filenamedate
+        except ParserError:
+            logging.debug('Dateutil parser unable to parse: ' + filenamedatestr)
+    else:
+        conv.startdate = conv.getoldestmessage()
 
     return conv
 

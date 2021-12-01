@@ -73,7 +73,7 @@ def main() -> int:
 
     fi.close()  # close input file, we are now done with it
 
-    eml = conv_to_eml.mimefromconv(conv)  # produce MIME message from Conversation (and any attachments)
+    eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = sys.argv[0].lstrip('./')

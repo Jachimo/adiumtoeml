@@ -20,7 +20,7 @@ with open('converted.css', 'r') as cssfile:
 domain: str = 'adium.invalid'
 
 
-def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
+def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     """Now we take the Conversation object and make a MIME email message out of it..."""
 
     # Create a base message object for the entire conversation's components
@@ -52,17 +52,17 @@ def mimefromconv(conv: conversation.Conversation) -> MIMEMultipart:
     if conv.startdate and conv.service:  # if we have startdate AND service...
         msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
         msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.startdate.strftime('%a, %d %b %Y'))
+                               + conv.startdate.strftime('%a, %b %d %Y'))  # US standard format
     elif conv.startdate and (not conv.service):  # if we have ONLY the startdate but NOT the service identifier...
-        msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')
         msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.startdate.strftime('%a, %d %b %Y'))
+                               + conv.startdate.strftime('%a, %b %d %Y'))
     elif (not conv.startdate) and conv.service:  # if we have ONLY the service identifier and NOT the startdate...
-        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
         msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
     else:  # if we have neither one...
-        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
+        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
         msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
                                + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
 
