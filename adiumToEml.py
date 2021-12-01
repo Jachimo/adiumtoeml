@@ -24,8 +24,7 @@ def main() -> int:
     parser.add_argument('outdirname', nargs='?', default=os.getcwd(),
                         help='Output directory (optional, defaults to cwd)')
     parser.add_argument('--clobber', action='store_true', help='Overwrite identically-named output files')
-    parser.add_argument('--configdir', help='Location of support files')
-    parser.add_argument('--xslfile', help='Name of XSL file to use for transform (within config dir)')
+    parser.add_argument('--no-background', help='Strips background color from message text', action='store_true')
     args = parser.parse_args()
 
     if not args.infilename:

@@ -6,6 +6,7 @@ from email.mime.base import MIMEBase
 import hashlib
 import datetime
 import email.encoders
+import re
 
 import conversation
 
@@ -18,6 +19,9 @@ with open('converted.css', 'r') as cssfile:
 #  DO NOT USE AN ACTUAL DOMAIN YOU DO NOT OWN/CONTROL
 #  Default is 'imservice.improgram.invalid' e.g. 'aim.adium.invalid'
 domain: str = 'adium.invalid'
+
+# Regex for matching CSS to strip when --strip-background argument is used
+bgcssregex = re.compile('background-color: .*?; *')
 
 
 def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
@@ -129,7 +133,10 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
             if message.html:
                 # If message exists as HTML, pass it through
                 line.append('<span class="message_text">')
-                line.append(message.html)
+                if args.no_background:  # strip background-color, e.g. "background-color: #acb5bf;"
+                    line.append(re.sub(bgcssregex, '', message.html))  # see regex at top of file
+                else:
+                    line.append(message.html)
                 line.append('</span>')
             elif message.text:
                 # If there's no HTML provided, create it from text and any styling information provided
@@ -143,7 +150,7 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                         line.append('font-size: ' + str(int(message.textsize)) + 'pt; ')
                     if message.textcolor:
                         line.append('color: ' + message.textcolor + '; ')
-                    if message.bgcolor:
+                    if message.bgcolor and (not args.no_background):
                         line.append('background-color: ' + message.bgcolor + '; ')
                     line.append('"')
                 line.append(' class="message_text">')
