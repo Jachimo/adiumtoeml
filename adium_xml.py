@@ -25,6 +25,7 @@ def toconv(infile: TextIO) -> conversation.Conversation:
 
     conv = conversation.Conversation()  # instantiate Conversation object
     conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
+    conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
     conv.set_service(chat.getAttribute('service'))  # set the service (AIM, MSN, etc.)
     conv.set_account(chat.getAttribute('account'))  # set the local account
 
@@ -48,6 +49,8 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg.date = dateutil.parser.parse(e.getAttribute('time'))
             msg.msgfrom = e.getAttribute('sender')
             conv.add_participant(msg.msgfrom)
+            if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
+                conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
             msg.text = get_inner_text(e)
             logging.debug('Message text is: ' + msg.text)
             if e.firstChild.nodeName == 'div':
@@ -66,7 +69,12 @@ def toconv(infile: TextIO) -> conversation.Conversation:
         except ParserError:
             logging.debug('Dateutil parser unable to parse: ' + filenamedatestr)
     else:
-        conv.startdate = conv.getoldestmessage()
+        conv.startdate = conv.getoldestmessage().date
+
+    # If there are less than two Participants in the Conversation, pad it with 'UNKNOWN' to prevent errors later
+    if len(conv.participants) < 2:
+        conv.add_participant('UNKNOWN')
+        conv.add_realname_to_userid('UNKNOWN', 'Unknown User')
 
     return conv
 

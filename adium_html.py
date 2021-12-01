@@ -23,6 +23,7 @@ def toconv(fi: TextIO) -> conversation.Conversation:
 
     filename = os.path.basename(fi.name)  # Determine basename of input file from file object
     conv.origfilename = filename  # Set it on the Conversation object for future reference
+    conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
 
     # Parse the first line of the input file for start date
     conv.startdate = get_filename_date(fi.readline(), filename)  # Only start date is set

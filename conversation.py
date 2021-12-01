@@ -10,6 +10,7 @@ class Conversation:
     """Top-level class for holding instant messaging Conversations"""
     def __init__(self):
         self.origfilename: str = ''  # Originating file name (where conversation was parsed from)
+        self.imclient: str = ''  # IM client program: Adium, iChat, etc.
         self.service: str = ''  # messaging service: AIM, iChat, MSN, etc.
         self.account: str = ''  # userid of local IM account (set BEFORE populating participants list!)
         self.participants: list = []  # List of Participant objects
@@ -40,6 +41,13 @@ class Conversation:
         for p in self.participants:
             if p.userid.lower() == userid.lower():
                 p.systemid = systemid
+
+    def get_realname_from_userid(self, userid):
+        for p in self.participants:
+            if p.userid.lower() == userid.lower():
+                return p.realname  # returns '' if not previously set using add_realname_to_userid()
+            else:
+                return False
 
     def set_account(self, account):
         self.account = account.lower()
@@ -78,7 +86,8 @@ class Conversation:
         for p in self.participants:
             if (p.userid.lower() == userid.lower()) and (p.position == 'local'):
                 return True
-        return False
+            else:
+                return False
 
 
 class Participant:

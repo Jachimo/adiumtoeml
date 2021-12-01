@@ -15,11 +15,6 @@ import conversation
 with open('converted.css', 'r') as cssfile:
     css = cssfile.read()
 
-# Nonroutable domain (or domain you own) to use in constructing URL-like objects
-#  DO NOT USE AN ACTUAL DOMAIN YOU DO NOT OWN/CONTROL
-#  Default is 'imservice.improgram.invalid' e.g. 'aim.adium.invalid'
-domain: str = 'adium.invalid'
-
 # Regex for matching CSS to strip when --strip-background argument is used
 bgcssregex = re.compile('background-color: .*?; *')
 
@@ -32,43 +27,46 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     # Then a sub-part for the two alternative text and HTML components
     msg_texts = MIMEMultipart('alternative')
 
-    # Create a fake domain-like string for constructing URL-like identifiers such as Message-ID
+    fakedomain = f'{conv.service.lower()}.{conv.imclient.lower()}.invalid'  # non-routable fake domain
+
+    # Construct 'From' header
+    if '@' in conv.participants[0].userid:  # For Facebook and Jabber, which have email-like userid@domain.tld
+        header_from_userid = conv.participants[0].userid
+    else:  # For AIM, MSN, etc. that use traditional screennames w/o @domain.tld
+        header_from_userid = conv.participants[0].userid + '@' + fakedomain
+    if conv.participants[0].realname:
+        header_from = f'"{conv.participants[0].realname}" <{header_from_userid}>'
+    else:
+        header_from = f'"{header_from_userid}" <{header_from_userid}>'
+    msg_base['From'] = header_from
+
+    # Construct 'To' header
+    if '@' in conv.participants[1].userid:  # For Facebook and Jabber, which have email-like userid@domain.tld
+        header_to_userid = conv.participants[1].userid
+    else:  # For AIM, MSN, etc. that use traditional screennames w/o @domain.tld
+        header_to_userid = conv.participants[1].userid + '@' + fakedomain
+    if conv.participants[1].realname:
+        header_to = f'"{conv.participants[1].realname}" <{header_to_userid}>'
+    else:
+        header_to = f'"{header_to_userid}" <{header_to_userid}>'
+    msg_base['To'] = header_to
+
+    # Construct 'Date' and 'Subject' headers
+    if conv.startdate:
+        header_datestr = conv.startdate.strftime("%a, %b %d %Y")  # RFC2822 format
+    else:
+        header_datestr = conv.getoldestmessage().date.strftime("%a, %b %d %Y")
     if conv.service:
-        fakedomain = conv.service.lower() + '.' + domain
+        header_service = conv.service
     else:
-        fakedomain = domain
-
-    # Set From and To using the participants list (makes emails seem directional)
-    #  If there are real names associated with userids, we include them, but if not we just use userids
-    #  Also, if the userid contains an '@', munge it to '[at]' to avoid choking MUA with two '@' symbols in From/To
-    if conv.participants[0].realname and conv.participants[1].realname:
-        msg_base['From'] = ('"' + conv.participants[0].realname + '" ' 
-                            + '<' + conv.participants[0].userid.replace('@', '[at]') + '@' + fakedomain + '>')
-        msg_base['To'] = ('"' + conv.participants[1].realname + '" ' 
-                          + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
+        header_service = 'Conversation'
+    if conv.get_realname_from_userid(conv.origfilename.split(' (')[0]):
+        header_withname = conv.get_realname_from_userid(conv.origfilename.split(' (')[0])
     else:
-        msg_base['From'] = ('"' + conv.participants[0].userid + '" ' 
-                            + '<' + conv.participants[0].userid.replace('@', '[at]') + '@' + fakedomain + '>')
-        msg_base['To'] = ('"' + conv.participants[1].userid + '" ' 
-                          + '<' + conv.participants[1].userid.replace('@', '[at]') + '@' + fakedomain + '>')
+        header_withname = conv.origfilename.split(' (')[0]
 
-    # Construct the Date and Subject headers, based on the information we have available in Conversation
-    if conv.startdate and conv.service:  # if we have startdate AND service...
-        msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')  # RFC2822 format
-        msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.startdate.strftime('%a, %b %d %Y'))  # US standard format
-    elif conv.startdate and (not conv.service):  # if we have ONLY the startdate but NOT the service identifier...
-        msg_base['Date'] = conv.startdate.strftime('%a, %d %b %Y %T %z')
-        msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.startdate.strftime('%a, %b %d %Y'))
-    elif (not conv.startdate) and conv.service:  # if we have ONLY the service identifier and NOT the startdate...
-        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
-        msg_base['Subject'] = (conv.service + ' with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
-    else:  # if we have neither one...
-        msg_base['Date'] = conv.getoldestmessage().date.strftime('%a, %d %b %Y %T %z')
-        msg_base['Subject'] = ('Conversation with ' + conv.origfilename.split(' (')[0] + ' on '
-                               + conv.origfilename[conv.origfilename.find(" (") + 2: conv.origfilename.find(")")])
+    msg_base['Date'] = header_datestr
+    msg_base['Subject'] = f'{header_service} with {header_withname} on {header_datestr}'
 
     # produce a text version of the messages
     text_lines = []
@@ -78,7 +76,10 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
             if msg.date:
                 line_parts.append('(' + msg.date.time().strftime('%r') + ')')
             if msg.msgfrom:
-                line_parts.append(msg.msgfrom + ':')
+                if conv.get_realname_from_userid(msg.msgfrom):
+                    line_parts.append(f'{conv.get_realname_from_userid(msg.msgfrom)} [{msg.msgfrom}]:')
+                else:
+                    line_parts.append(f'{msg.msgfrom}:')
             line_parts.append(msg.text)
             text_lines.append(' '.join(line_parts))
         if msg.type == 'event':  # Don't put the msgfrom section on system messages, it looks dumb
@@ -124,12 +125,14 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 line.append('</span>')
             if message.msgfrom:
                 if conv.userid_islocal(message.msgfrom):
-                    line.append('<span class="localscreenname">')  # if from the local user, class it appropriately
+                    line.append('<span class="localname">')  # if from the local user, class it appropriately
                 else:
-                    line.append('<span class="screenname">')  # otherwise, generic screenname (likely remote)
-                line.append(message.msgfrom + ':&ensp;')
+                    line.append('<span class="name">')  # otherwise, generic screenname (likely remote)
+                if conv.get_realname_from_userid(message.msgfrom):
+                    line.append(conv.get_realname_from_userid(message.msgfrom) + ':&ensp;')
+                else:
+                    line.append(message.msgfrom + ':&ensp;')
                 line.append('</span>')
-
             if message.html:
                 # If message exists as HTML, pass it through
                 line.append('<span class="message_text">')
