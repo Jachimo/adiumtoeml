@@ -68,13 +68,19 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     msg_base['Date'] = header_datestr
     msg_base['Subject'] = f'{header_service} with {header_withname} on {header_datestr}'
 
+    # Determine date format to use in logs
+    if (conv.getyoungestmessage().date - conv.getoldestmessage().date) > datetime.timedelta(days=1):
+        datefmt = '%D %r'
+    else:
+        datefmt = '%r'
+
     # produce a text version of the messages
     text_lines = []
     for msg in conv.messages:
         line_parts = []
         if msg.type == 'message':  # formatting for most lines
             if msg.date:
-                line_parts.append('(' + msg.date.time().strftime('%r') + ')')
+                line_parts.append('(' + msg.date.strftime(datefmt) + ')')
             if msg.msgfrom:
                 if conv.get_realname_from_userid(msg.msgfrom):
                     line_parts.append(f'{conv.get_realname_from_userid(msg.msgfrom)} [{msg.msgfrom}]:')
@@ -84,7 +90,7 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
             text_lines.append(' '.join(line_parts))
         if msg.type == 'event':  # Don't put the msgfrom section on system messages, it looks dumb
             if msg.date:
-                line_parts.append('(' + msg.date.time().strftime('%r') + ')')
+                line_parts.append('(' + msg.date.strftime(datefmt) + ')')
             line_parts.append(msg.text)
             text_lines.append(' '.join(line_parts))
     mimetext = MIMEText('\n'.join(text_lines), 'text')
@@ -102,7 +108,7 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
             line.append('<p class="system_message">')
             if message.date:
                 line.append('<span class="timestamp">')
-                line.append('(' + message.date.strftime('%r') + ')&nbsp;')
+                line.append('(' + message.date.strftime(datefmt) + ')&nbsp;')
                 line.append('</span>')
             if message.html:
                 # If message exists as HTML, pass it through
@@ -121,7 +127,7 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
             line.append('<p class="message">')
             if message.date:
                 line.append('<span class="timestamp">')
-                line.append('(' + message.date.strftime('%r') + ')&nbsp;')
+                line.append('(' + message.date.strftime(datefmt) + ')&nbsp;')
                 line.append('</span>')
             if message.msgfrom:
                 if conv.userid_islocal(message.msgfrom):
