@@ -30,8 +30,8 @@ def main() -> int:
     if not args.infilename:
         logging.critical("No input file specified.")
         return 1
-    if not os.path.isfile(args.infilename):
-        logging.critical("Input must be a file.")
+    if (not os.path.isfile(args.infilename)) and (os.path.splitext(args.infilename)[-1] != '.chatlog'):
+        logging.critical("Input must be a file or a .chatlog bundle.")
         return 1
     if os.path.splitext(args.infilename)[-1] not in ['.chatlog', '.xml', '.AdiumHTMLLog', '.html']:
         logging.critical("Input file suffix not one of the supported types.")
@@ -39,6 +39,18 @@ def main() -> int:
     if not os.path.isdir(args.outdirname):
         logging.critical("Output dir (" + args.outdirname + ") specified but not a directory.")
         return 1
+
+    # Special handling for .chatlog "bundles" (special Mac OS directories)
+    if (os.path.isdir(args.infilename)) and (os.path.splitext(args.infilename)[-1] == '.chatlog'):
+        logging.debug('Mac OS .chatlog bundle detected: ' + os.path.basename(args.infilename))
+        # Directory '422202 (2011-03-16T11.18.15-0400).chatlog' should contain '422202 (2011-03-16T11.18.15-0400).xml'
+        xmlfilename = os.path.splitext(os.path.basename(args.infilename))[0] + '.xml'
+        args.infilename = os.path.join(args.infilename, xmlfilename)
+        if os.path.isfile(args.infilename):
+            logging.debug(f'XML file found at {os.path.sep.join(args.infilename.split(os.path.sep)[-6:])}')
+        else:
+            logging.critical(f'Bundle detected but inner XML file {os.path.basename(args.infilename)} not found')
+            return 1
 
     outfilename = os.path.splitext(os.path.basename(args.infilename))[0] + '.eml'  # .mht or .mhtml also valid
     outpath = os.path.join(args.outdirname, outfilename)
