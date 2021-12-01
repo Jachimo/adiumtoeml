@@ -48,7 +48,6 @@ class Conversation:
         self.service = service
 
     def add_message(self, message):
-        # Might want to add some validation here
         self.messages.append(message)
 
     def getoldestmessage(self):

@@ -28,9 +28,9 @@ def toconv(infile: TextIO) -> conversation.Conversation:
     conv.origfilename = os.path.basename(infile.name)  # Determine name of input file and store for future reference
 
     conv.set_service(root.attrib['service'])  # set the service (AIM, MSN, etc.)
-    logging.debug('IM service is ' + conv.service)
+    conv.set_account(root.attrib['account'])  # set the local account
 
-    conv.set_account(root.attrib['account'])
+    logging.debug('IM service is ' + conv.service)
     logging.debug('IM service account is: ' + conv.account)
 
     for e in root.iter():  # iterate over all child elements of the root

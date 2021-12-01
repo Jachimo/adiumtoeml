@@ -10,9 +10,9 @@ import logging
 import os
 import argparse
 
-import adium_xml  # for newer XML based .chatlog files
-import adium_html  # for older HTML based .AdiumHTMLLog files
-import conv_to_eml  # for output as MIME .eml file/message
+import adium_xml    # Input: newer XML-based Adium (.chatlog) files
+import adium_html   # Input: older HTML-based Adium (.AdiumHTMLLog) files
+import conv_to_eml  # Output: MIME .eml file/message
 
 
 def main() -> int:
