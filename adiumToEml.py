@@ -87,7 +87,7 @@ def main() -> int:
     eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
 
     # Set additional headers (comment out if not desired)
-    eml['X-Converted-By'] = sys.argv[0].lstrip('./')
+    eml['X-Converted-By'] = os.path.basename(sys.argv[0])
 
     logging.debug("Ready to flatten and write message...")
     try:

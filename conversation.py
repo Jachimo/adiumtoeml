@@ -42,12 +42,12 @@ class Conversation:
             if p.userid.lower() == userid.lower():
                 p.systemid = systemid
 
-    def get_realname_from_userid(self, userid):
+    def get_realname_from_userid(self, userid) -> str:
         for p in self.participants:
             if p.userid.lower() == userid.lower():
                 return p.realname  # returns '' if not previously set using add_realname_to_userid()
             else:
-                return False
+                return ''
 
     def set_account(self, account):
         self.account = account.lower()
@@ -61,16 +61,14 @@ class Conversation:
     def getoldestmessage(self):
         try:
             return sorted(self.messages)[0]
-        except:  # TODO figure out what exception this throws and catch specifically
-            raise
-            #return False
+        except IndexError:
+            return False
 
     def getyoungestmessage(self):
         try:
             return sorted(self.messages)[-1]
-        except:  # TODO figure out what exception this throws and catch specifically
-            raise
-            #return False
+        except IndexError:
+            return False
 
     def set_local_account(self, userid):
         for p in self.participants:

@@ -15,10 +15,7 @@ localtz: str = 'America/New_York'  # timezone that chat logs were created in (si
 
 
 def toconv(fi: TextIO) -> conversation.Conversation:
-    """Convert old-style .AdiumHTMLLog file to a Conversation object
-
-    header and footer are files containing the pre-<body> and post-<body> sections of HTML document
-    """
+    """Convert old-style .AdiumHTMLLog file to a Conversation object"""
     conv: Conversation = conversation.Conversation()
 
     filename = os.path.basename(fi.name)  # Determine basename of input file from file object

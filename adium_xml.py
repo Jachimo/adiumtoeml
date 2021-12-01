@@ -27,7 +27,7 @@ def toconv(infile: TextIO) -> conversation.Conversation:
     conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
     conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
     conv.set_service(chat.getAttribute('service'))  # set the service (AIM, MSN, etc.)
-    conv.set_account(chat.getAttribute('account'))  # set the local account
+    conv.set_account(chat.getAttribute('account'))  # set conv.account to the local userid
 
     logging.debug('IM service is ' + conv.service)
     logging.debug('Local account is: ' + conv.account)
@@ -66,7 +66,7 @@ def toconv(infile: TextIO) -> conversation.Conversation:
         try:
             filenamedate = dateutil.parser.parse(filenamedatestr.replace('.', ':'))
             conv.startdate = filenamedate
-        except ParserError:
+        except dateutil.parser.ParserError:
             logging.debug('Dateutil parser unable to parse: ' + filenamedatestr)
     else:
         conv.startdate = conv.getoldestmessage().date
