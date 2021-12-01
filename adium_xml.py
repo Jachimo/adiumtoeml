@@ -40,10 +40,8 @@ def toconv(infile: TextIO) -> conversation.Conversation:
                 msg.text = 'Window opened by ' + e.getAttribute('sender')
             if e.getAttribute('type') == 'windowClosed':
                 msg.text = 'Window closed by ' + e.getAttribute('sender')
-            if e.getAttribute('type') == 'offline':
-                msg.text = 'User ' + e.getAttribute('sender') + ' is now offline.'
-            if e.getAttribute('type') == 'online':
-                msg.text = 'User ' + e.getAttribute('sender') + ' is now online.'
+            if e.getAttribute('type') in ['offline', 'online', 'idle', 'available']:
+                msg.text = 'User ' + e.getAttribute('sender') + ' is now ' + e.getAttribute('type') + '.'
             conv.add_message(msg)
         elif e.nodeName == 'message':  # Handle <message>
             msg = conversation.Message('message')
