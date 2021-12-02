@@ -8,107 +8,90 @@ from typing import TextIO
 import re
 
 import conversation
-from conversation import Conversation
 
 doctype: str = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n'
 localtz: str = 'America/New_York'  # timezone that chat logs were created in (since no tz in HTML logs)
+tags: re.Pattern = re.compile('<.*?>')  # For better regex performance
 
 
 def toconv(fi: TextIO) -> conversation.Conversation:
     """Convert old-style .AdiumHTMLLog file to a Conversation object"""
-    conv: Conversation = conversation.Conversation()
-
-    conv.origfilename = os.path.basename(fi.name)  # Set it on the Conversation object for future reference
+    conv: conversation.Conversation = conversation.Conversation()
     conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
+    conv.origfilename = os.path.basename(fi.name)  # Set it on the Conversation object for future reference
 
     # Parse the first line of the input file for start date
     conv.startdate = get_filename_date(fi.readline(), conv.origfilename)  # Only start date is set
+    logging.debug(f'Start date set to {conv.startdate}')
 
     # If possible, determine the IM service based on the grandparent folder name if hierarchy is either:
     #  /path/to/Adium Logs/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
     #  /path/to/Adium/Logs*/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
-    filepathlist = os.path.realpath(fi.name).split(os.path.sep)  # returns a list
+    filepathlist = os.path.realpath(fi.name).split(os.path.sep)
     if (filepathlist[-4] == 'Adium Logs') or (filepathlist[-4].find('Logs') == 0 and filepathlist[-5] == 'Adium'):
         # We can *probably* assume we're in the Adium Logs tree...
         conv.service = filepathlist[-3].split('.', 1)[0]
         conv.account = filepathlist[-3].split('.', 1)[1]
 
     fi.seek(0)
-    for line in fi:
-        if 'class="receive"' in line:  # probably a received message
+    divs = fi.read().split('</div>\n')  # Split by <div>
+    for div in divs:
+        logging.debug(f'DIV: {div}')
+        if 'class="receive"' in div:  # probably a received message
             msg = conversation.Message('message')  # Create Message object
-            logtime = getlinecontent(line, '<span class="timestamp">', '</span>')  # note this is time ONLY
-            try:
-                msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
-            except ValueError:
-                logging.critical(f'Error while parsing dates in {conv.origfilename}')
-                raise
-            msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
+            logtime = getlinecontent(div, '<span class="timestamp">', '</span>')  # note this is time ONLY
+            msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            msg.msgfrom = getlinecontent(div, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
             conv.set_remote_account(msg.msgfrom)
-            msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
+            msg.html = getlinecontent(div, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
-        elif 'class="send"' in line:  # probably a transmitted message
+        elif 'class="send"' in div:  # probably a transmitted message
             msg = conversation.Message('message')
-            logtime = getlinecontent(line, '<span class="timestamp">', '</span>')
-            try:
-                msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
-            except ValueError:
-                logging.critical(f'Error while parsing dates in {conv.origfilename}')
-                raise
-            msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
+            logtime = getlinecontent(div, '<span class="timestamp">', '</span>')
+            msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            msg.msgfrom = getlinecontent(div, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
             conv.set_local_account(msg.msgfrom)
-            msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
+            msg.html = getlinecontent(div, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
-        elif 'class="status"' in line:  # probably a status message
+        elif 'class="status"' in div:  # status message (can be multiline)
             msg = conversation.Message('event')
-            logtime = getlinecontent(line, ' (', ')</div>')  # Status msgs use different timestamp format
             try:
+                logtime = div.rsplit('(')[-1].strip(')')  # this is fairly fragile
                 msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
             except ValueError:
-                logging.critical(f'Error while parsing dates in {conv.origfilename}')
-                raise
+                logging.debug(f'Error while parsing log time value: {logtime}')
+                pass
             msg.msgfrom = 'System Message'
-            msg.html = getlinecontent(line, '<div class="status">', ' (')
-            msg.text = msg.html  # No HTML tags in status message text
+            msg.text = getlinecontent(div, '<div class="status">', ' (')
+            msg.html = msg.text.replace('\n', '<br>\n')
             conv.add_message(msg)
         else:
-            logging.info('Unknown line encountered: ' + line)
-
+            logging.info('Unknown section encountered: ' + div)
     # If there are less than two Participants in the Conversation, pad it with 'UNKNOWN' to prevent errors later
     if len(conv.participants) < 2:
         conv.add_participant('UNKNOWN')
         conv.add_realname_to_userid('UNKNOWN', 'Unknown User')
-
     return conv
 
 
 def striphtml(text: str) -> str:
     """Remove html tags from a string"""
     # See https://medium.com/@jorlugaqui/how-to-strip-html-tags-from-a-string-in-python-7cb81a2bbf44
-    clean = re.compile('<.*?>')  # For better performance
-    return re.sub(clean, '', text)
+    return re.sub(tags, '', text)
 
 
 def make_msg_time(logtime: str, convdateobj: datetime.datetime) -> datetime.datetime:
     """Take a time-only string (like '12:01:48 AM') and combine with date from conv.startdate to produce datetime"""
     # TODO may not handle logs that cross midnight very well...
-    #  May need to do something with timedeltas based on the start of the log to get it right
-
     try:
         time = datetime.datetime.strptime(logtime, '%I:%M:%S %p')  # format is usually '12:01:48 AM'
     except ValueError:
-        try:
-            time = datetime.datetime.strptime(logtime, '%H:%M:%S')  # if that doesn't work, try %H:%M:%S
-        except ValueError:
-            logging.critical(f'Error while parsing log time value: {logtime}')
-            raise
-
+        time = datetime.datetime.strptime(logtime, '%H:%M:%S')  # if that doesn't work, try %H:%M:%S
     dt = datetime.datetime.combine(convdateobj.date(), time.time())
-
     mytz = pytz.timezone(localtz)  # set the log's timezone at the top of this file
     return mytz.localize(dt)
 
@@ -119,14 +102,14 @@ def get_filename_date(line: str, filename: str) -> datetime.datetime:
     """
     # Date we can determine from the log file's filename
     logdate = getlinecontent(filename, "(", ")")
-    logging.debug("Log date appears to be " + logdate)
+    logging.debug(f'Filename date is {logdate}')
 
     # We must determine time from inside the log
     if '<span class="timestamp">' in line:
         logtime = getlinecontent(line, '<span class="timestamp">', '</span>')
     if '<div class="status">' in line:
         logtime = getlinecontent(line, ' (', ')</div>')
-    logging.debug("Logtime appears to be " + logtime)
+    logging.debug(f'Log time is {logtime}')
 
     # Turn it into a datetime object
     try:
