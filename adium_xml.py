@@ -48,15 +48,15 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg = conversation.Message('message')
             msg.date = dateutil.parser.parse(e.getAttribute('time'))
             msg.msgfrom = e.getAttribute('sender')
-            logging.debug(f'Adding participant: {msg.msgfrom}')
             conv.add_participant(msg.msgfrom)
-            ## Start debugging
+            ## Start debugging TODO remove me
+            logging.debug(f'Should {msg.msgfrom} be considered local?  {(msg.msgfrom == conv.account)}')
             logging.debug(f'Added participant (msg.msgfrom) with user id: {msg.msgfrom}')
             for pid in conv.listparticipantuserids():
-                logging.debug(f'{pid}: User ID: {conv.get_participant(pid).userid}, '
-                              f'{pid}: Position: {conv.get_participant(pid).position}, '
-                              f'{pid}: Is Local? {conv.userid_islocal(pid)}')
-            logging.debug(f'Is {msg.msgfrom} the same as {conv.account}?  {(msg.msgfrom == conv.account)}')
+                logging.debug(f'Participant user id list contains {conv.listparticipantuserids()}')
+                logging.debug(f'\n  User ID: {conv.get_participant(pid).userid},'
+                              f'\n  Position: {conv.get_participant(pid).position},'
+                              f'\n  Is Local? {conv.userid_islocal(pid)}')
             ## End Debugging
             if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
                 conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
@@ -68,6 +68,7 @@ def toconv(infile: TextIO) -> conversation.Conversation:
                 msg.html = e.firstChild.toxml()
             logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
+            logging.debug('End of message processing\n')  # TODO remove me
 
     # Get date from filename, if present; otherwise use timestamp from first message
     if (conv.origfilename.find('(') != -1) and (conv.origfilename.find(')') != -1):

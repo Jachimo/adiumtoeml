@@ -4,7 +4,7 @@
 
 from datetime import datetime  # for hints
 import hashlib
-import logging
+import copy
 
 
 class Conversation:
@@ -23,7 +23,7 @@ class Conversation:
     def add_participant(self, userid):
         if userid not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
             p = Participant(userid)
-            self.participants.append(p)
+            self.participants.append(copy.deepcopy(p))
         if userid == self.account:  # if the userid we are adding is the local account, mark it as such
             self.set_local_account(userid)
 
@@ -49,11 +49,10 @@ class Conversation:
                 p.systemid = systemid
 
     def get_realname_from_userid(self, userid) -> str:
-        for p in self.participants:
-            if p.userid == userid:
-                return p.realname  # returns '' if not previously set using add_realname_to_userid()
-            else:
-                return ''
+        for p in [p for p in self.participants if p.userid == userid]:
+            return p.realname  # returns '' if not previously set using add_realname_to_userid()
+        else:
+            return ''
 
     def set_account(self, account):
         self.account = account
@@ -87,8 +86,8 @@ class Conversation:
                 p.position = 'remote'
 
     def userid_islocal(self, userid):
-        for p in self.participants:
-            if (p.userid == userid) and (p.position == 'local'):
+        for p in [p for p in self.participants if p.userid == userid]:
+            if p.position == 'local':
                 return True
             else:
                 return False
