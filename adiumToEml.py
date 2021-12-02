@@ -16,8 +16,6 @@ import conv_to_eml  # Output: MIME .eml file/message
 
 
 def main() -> int:
-    logging.basicConfig(level=logging.DEBUG)  # change level for desired verbosity: DEBUG, INFO, WARNING, ERROR, etc.
-
     # Parse arguments (see https://docs.python.org/3/library/argparse.html)
     parser = argparse.ArgumentParser(description='Convert Adium log files to RFC822 MIME text files (.eml)')
     parser.add_argument('infilename', help='Input file')
@@ -25,7 +23,13 @@ def main() -> int:
                         help='Output directory (optional, defaults to cwd)')
     parser.add_argument('--clobber', action='store_true', help='Overwrite identically-named output files')
     parser.add_argument('--no-background', help='Strips background color from message text', action='store_true')
+    parser.add_argument('--debug', help='Enable debug mode (very verbose output)', action='store_true')
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)  # change level for desired verbosity: DEBUG, INFO, WARNING, ERROR, etc.
 
     if not args.infilename:
         logging.critical("No input file specified.")
@@ -99,7 +103,9 @@ def main() -> int:
     fo.write(eml.as_string())  # Write out the message
     logging.debug('Finished writing ' + outpath)
     fo.close()
-    print(args.infilename + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
+
+    # Write out input name and output Message-ID for logging to a file if desired
+    print(os.path.basename(args.infilename) + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
 
     return 0  # exit successfully
 

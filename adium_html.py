@@ -18,12 +18,11 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     """Convert old-style .AdiumHTMLLog file to a Conversation object"""
     conv: Conversation = conversation.Conversation()
 
-    filename = os.path.basename(fi.name)  # Determine basename of input file from file object
-    conv.origfilename = filename  # Set it on the Conversation object for future reference
+    conv.origfilename = os.path.basename(fi.name)  # Set it on the Conversation object for future reference
     conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
 
     # Parse the first line of the input file for start date
-    conv.startdate = get_filename_date(fi.readline(), filename)  # Only start date is set
+    conv.startdate = get_filename_date(fi.readline(), conv.origfilename)  # Only start date is set
 
     # If possible, determine the IM service based on the grandparent folder name if hierarchy is either:
     #  /path/to/Adium Logs/AIM.myaccountname/theiraccountname/theiraccountname (date).AdiumHTMLLog
@@ -39,32 +38,51 @@ def toconv(fi: TextIO) -> conversation.Conversation:
         if 'class="receive"' in line:  # probably a received message
             msg = conversation.Message('message')  # Create Message object
             logtime = getlinecontent(line, '<span class="timestamp">', '</span>')  # note this is time ONLY
-            msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            try:
+                msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            except ValueError:
+                logging.critical(f'Error while parsing dates in {conv.origfilename}')
+                raise
             msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
+            conv.set_remote_account(msg.msgfrom)
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
         elif 'class="send"' in line:  # probably a transmitted message
             msg = conversation.Message('message')
             logtime = getlinecontent(line, '<span class="timestamp">', '</span>')
-            msg.date = make_msg_time(logtime, conv.startdate)
+            try:
+                msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            except ValueError:
+                logging.critical(f'Error while parsing dates in {conv.origfilename}')
+                raise
             msg.msgfrom = getlinecontent(line, '<span class="sender">', ': </span>')
             conv.add_participant(msg.msgfrom)
+            conv.set_local_account(msg.msgfrom)
             msg.html = getlinecontent(line, '<pre class="message">', '</pre>')
             msg.text = striphtml(msg.html)
             conv.add_message(msg)
         elif 'class="status"' in line:  # probably a status message
             msg = conversation.Message('event')
             logtime = getlinecontent(line, ' (', ')</div>')  # Status msgs use different timestamp format
-            msg.date = make_msg_time(logtime, conv.startdate)
+            try:
+                msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
+            except ValueError:
+                logging.critical(f'Error while parsing dates in {conv.origfilename}')
+                raise
             msg.msgfrom = 'System Message'
             msg.html = getlinecontent(line, '<div class="status">', ' (')
             msg.text = msg.html  # No HTML tags in status message text
             conv.add_message(msg)
-        # TODO Handle attachments?
         else:
             logging.info('Unknown line encountered: ' + line)
+
+    # If there are less than two Participants in the Conversation, pad it with 'UNKNOWN' to prevent errors later
+    if len(conv.participants) < 2:
+        conv.add_participant('UNKNOWN')
+        conv.add_realname_to_userid('UNKNOWN', 'Unknown User')
+
     return conv
 
 
@@ -83,7 +101,11 @@ def make_msg_time(logtime: str, convdateobj: datetime.datetime) -> datetime.date
     try:
         time = datetime.datetime.strptime(logtime, '%I:%M:%S %p')  # format is usually '12:01:48 AM'
     except ValueError:
-        time = datetime.datetime.strptime(logtime, '%H:%M:%S')  # if that doesn't work, try %H:%M:%S
+        try:
+            time = datetime.datetime.strptime(logtime, '%H:%M:%S')  # if that doesn't work, try %H:%M:%S
+        except ValueError:
+            logging.critical(f'Error while parsing log time value: {logtime}')
+            raise
 
     dt = datetime.datetime.combine(convdateobj.date(), time.time())
 

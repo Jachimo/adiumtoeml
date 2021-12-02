@@ -140,3 +140,6 @@ venv.bak/
 
 # IntelliJ
 /out/
+
+# Script output logfiles
+converted_*.log

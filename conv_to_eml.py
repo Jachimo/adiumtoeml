@@ -6,6 +6,7 @@ from email.mime.base import MIMEBase
 import hashlib
 import datetime
 import email.encoders
+from email.utils import format_datetime
 import re
 
 import conversation
@@ -53,9 +54,9 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
 
     # Construct 'Date' and 'Subject' headers
     if conv.startdate:
-        header_datestr = conv.startdate.strftime("%a, %b %d %Y")  # RFC2822 format
+        header_date = conv.startdate
     else:
-        header_datestr = conv.getoldestmessage().date.strftime("%a, %b %d %Y")
+        header_date = conv.getoldestmessage().date
     if conv.service:
         header_service = conv.service
     else:
@@ -65,8 +66,8 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     else:
         header_withname = conv.origfilename.split(' (')[0]
 
-    msg_base['Date'] = header_datestr
-    msg_base['Subject'] = f'{header_service} with {header_withname} on {header_datestr}'
+    msg_base['Date'] = format_datetime(header_date)
+    msg_base['Subject'] = f'{header_service} with {header_withname} on {header_date.strftime("%a, %b %e %Y")}'
 
     # Determine date format to use in logs
     if (conv.getyoungestmessage().date - conv.getoldestmessage().date) > datetime.timedelta(days=1):
