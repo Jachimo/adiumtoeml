@@ -23,6 +23,20 @@ bgcssregex = re.compile('background-color: .*?; *')
 
 def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     """Now we take the Conversation object and make a MIME email message out of it..."""
+    # Do some sanity-checking on the input Conversation and skip trivial (no message contents) logs
+    if not isinstance(conv, conversation.Conversation):
+        error_msg = 'conv_to_eml was passed an unknown or malformed object; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
+    if len(conv.messages) == 0:
+        error_msg = 'Conversation does not appear to contain any Messages; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
+    if len(conv.listparticipantuserids()) < 2:
+        error_msg = 'Conversation does not have enough Participants to construct email-like document; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
+
     # Create a base message object for the entire conversation's components
     msg_base = MIMEMultipart('related')
 
