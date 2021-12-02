@@ -22,9 +22,9 @@ bgcssregex = re.compile('background-color: .*?; *')
 
 def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     """Now we take the Conversation object and make a MIME email message out of it..."""
-
     # Create a base message object for the entire conversation's components
     msg_base = MIMEMultipart('related')
+
     # Then a sub-part for the two alternative text and HTML components
     msg_texts = MIMEMultipart('alternative')
 
@@ -117,7 +117,6 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 line.append(message.html)
                 line.append('</span>')
             elif message.text:
-                # If there's no HTML provided, create it from text and any styling information provided
                 line.append('<span class="message_text">')
                 line.append(message.text.replace('\n', '<br>'))  # convert any LFs in message text to <br>s
                 line.append('</span>')
@@ -140,16 +139,14 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 else:
                     line.append(message.msgfrom + ':&ensp;')
                 line.append('</span>')
-            if message.html:
-                # If message exists as HTML, pass it through
+            if message.html:  # If message exists as HTML, pass it through
                 line.append('<span class="message_text">')
                 if args.no_background:  # strip background-color, e.g. "background-color: #acb5bf;"
                     line.append(re.sub(bgcssregex, '', message.html))  # see regex at top of file
                 else:
                     line.append(message.html)
                 line.append('</span>')
-            elif message.text:
-                # If there's no HTML provided, create it from text and any styling information provided
+            elif message.text:  # If there's no HTML provided, create it from text and styling information
                 line.append('<span')
                 if message.textfont or message.textsize or message.textcolor or message.bgcolor:
                     # only if needed, we add a style attribute to the message text...
