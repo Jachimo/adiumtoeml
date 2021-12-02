@@ -69,8 +69,6 @@ def toconv(fi: TextIO) -> conversation.Conversation:
             msg.text = getlinecontent(div, '<div class="status">', ' (')
             msg.html = msg.text.replace('\n', '<br>\n')
             conv.add_message(msg)
-        else:
-            logging.info('Unknown section encountered: ' + div)
     # If there are less than two Participants in the Conversation, pad it with 'UNKNOWN' to prevent errors later
     if len(conv.participants) < 2:
         conv.add_participant('UNKNOWN')

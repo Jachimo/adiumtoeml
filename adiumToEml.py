@@ -88,7 +88,11 @@ def main() -> int:
 
     fi.close()  # close input file, we are now done with it
 
-    eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
+    try:
+        eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
+    except ValueError:
+        logging.critical('Fatal error while creating MIME document from ' + args.infilename)
+        return 1
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = os.path.basename(sys.argv[0])
