@@ -41,7 +41,7 @@ def toconv(fi: TextIO) -> conversation.Conversation:
             msg = conversation.Message('message')  # Create Message object
             logtime = getlinecontent(div, '<span class="timestamp">', '</span>')  # note this is time ONLY
             msg.date = make_msg_time(logtime, conv.startdate)  # create datetime object for message
-            msg.msgfrom = getlinecontent(div, '<span class="sender">', ': </span>')
+            msg.msgfrom = getlinecontent(div, '<span class="sender">', ': </span>').split(' ')[0]
             conv.add_participant(msg.msgfrom)
             conv.set_remote_account(msg.msgfrom)
             msg.html = getlinecontent(div, '<pre class="message">', '</pre>')
