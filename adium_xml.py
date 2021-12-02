@@ -26,8 +26,8 @@ def toconv(infile: TextIO) -> conversation.Conversation:
     conv = conversation.Conversation()  # instantiate Conversation object
     conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
     conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
-    conv.set_service(chat.getAttribute('service'))  # set the service (AIM, MSN, etc.)
-    conv.set_account(chat.getAttribute('account'))  # set conv.account to the local userid
+    conv.set_service(chat.getAttribute('service').strip())  # set the service (AIM, MSN, etc.)
+    conv.set_account(chat.getAttribute('account').strip())  # set conv.account to the local userid
 
     logging.debug('IM service is ' + conv.service)
     logging.debug('Local account is: ' + conv.account)
@@ -48,7 +48,16 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg = conversation.Message('message')
             msg.date = dateutil.parser.parse(e.getAttribute('time'))
             msg.msgfrom = e.getAttribute('sender')
+            logging.debug(f'Adding participant: {msg.msgfrom}')
             conv.add_participant(msg.msgfrom)
+            ## Start debugging
+            logging.debug(f'Added participant (msg.msgfrom) with user id: {msg.msgfrom}')
+            for pid in conv.listparticipantuserids():
+                logging.debug(f'{pid}: User ID: {conv.get_participant(pid).userid}, '
+                              f'{pid}: Position: {conv.get_participant(pid).position}, '
+                              f'{pid}: Is Local? {conv.userid_islocal(pid)}')
+            logging.debug(f'Is {msg.msgfrom} the same as {conv.account}?  {(msg.msgfrom == conv.account)}')
+            ## End Debugging
             if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
                 conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
             msg.text = get_inner_text(e)

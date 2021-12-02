@@ -4,6 +4,7 @@
 
 from datetime import datetime  # for hints
 import hashlib
+import logging
 
 
 class Conversation:
@@ -20,11 +21,16 @@ class Conversation:
         self.hasattachments: bool = False  # Flag to indicate that 1 or more message contains an attachment
 
     def add_participant(self, userid):
-        if userid.lower() not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
-            p = Participant(userid.lower())
+        if userid not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
+            p = Participant(userid)
             self.participants.append(p)
-        if userid.lower() == self.account.lower():  # if the userid we are adding is the local account, mark it as such
-            self.set_local_account(userid.lower())
+        if userid == self.account:  # if the userid we are adding is the local account, mark it as such
+            self.set_local_account(userid)
+
+    def get_participant(self, userid):
+        for p in self.participants:
+            if p.userid == userid:
+                return p
 
     def listparticipantuserids(self):
         userids = []
@@ -34,23 +40,23 @@ class Conversation:
 
     def add_realname_to_userid(self, userid, realname):
         for p in self.participants:
-            if p.userid.lower() == userid.lower():
+            if p.userid == userid:
                 p.realname = realname
 
     def add_systemid_to_userid(self, userid, systemid):
         for p in self.participants:
-            if p.userid.lower() == userid.lower():
+            if p.userid == userid:
                 p.systemid = systemid
 
     def get_realname_from_userid(self, userid) -> str:
         for p in self.participants:
-            if p.userid.lower() == userid.lower():
+            if p.userid == userid:
                 return p.realname  # returns '' if not previously set using add_realname_to_userid()
             else:
                 return ''
 
     def set_account(self, account):
-        self.account = account.lower()
+        self.account = account
 
     def set_service(self, service):
         self.service = service
@@ -72,17 +78,17 @@ class Conversation:
 
     def set_local_account(self, userid):
         for p in self.participants:
-            if p.userid.lower() == userid.lower():
+            if p.userid == userid:
                 p.position = 'local'
 
     def set_remote_account(self, userid):
         for p in self.participants:
-            if p.userid.lower() == userid.lower():
+            if p.userid == userid:
                 p.position = 'remote'
 
     def userid_islocal(self, userid):
         for p in self.participants:
-            if (p.userid.lower() == userid.lower()) and (p.position == 'local'):
+            if (p.userid == userid) and (p.position == 'local'):
                 return True
             else:
                 return False
