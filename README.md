@@ -95,11 +95,8 @@ Please feel free to fork this project; pull requests will be considered as long 
 This software is provided without warranty and without any representations as to its functionality for a particular purpose.
 End-user support is not available. 
 
-## Errata
+## Errata & References
 
 ### Adium Log Formats
 
-Adium used a variety of filename schemes for its logs over the years.
-Early versions of Adium wrote `.AdiumHTMLLog` files, which contained the messages as HTML tag contents.  Occasionally, logs with an `.html` extension are seen.
-Later versions used XML, either written directly to `.chatlog` files, or sometimes written to an `.xml` file hidden inside a `.chatlog` directory (which was made to appear as a file-like Package object on Mac OS X).
-This tool _should_ be able to parse most of them, provided they are well-formed.
+Information on the various 'flavors' of Adium log formats can be found [in this Github Gist](https://gist.github.com/kadin2048/ffe811e56c8e8fb6ceb8bade09439341).
