@@ -24,7 +24,3 @@ bash -c './adiumToEml.py "$1" "$2" --no-background || echo "$1">"$3"' none {} "$
 find "$indir" -name '*.AdiumHTMLLog' -exec \
 bash -c './adiumToEml.py "$1" "$2" --no-background || echo "$1">>"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
 | tee -a "$outdir"/"$logfile"
-
-find "$indir" -name '*.html' -exec \
-bash -c './adiumToEml.py "$1" "$2" --no-background || echo "$1">>"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
-| tee -a "$outdir"/"$logfile"
