@@ -24,7 +24,7 @@ These are:
 * `pytz` - timezone handling support
 * `py-dateutil` - extensions to the python `datetime` module, including timezone-aware date parsing
 
-### Options
+### Other Options
 
 The most up-to-date usage options can be listed by running `./adiumToEml.py -h`.
 It is included here for reference:
@@ -50,7 +50,19 @@ optional arguments:
 Adium logs of Facebook chat conversations (from the period when Facebook was using an open standards, XMPP-compatible chat service) seem to be frequently malformed.
 Although the tool attempts to link Facebook user IDs to real names (stored as 'aliases' in the XML), this is only occasionally possible.
 Also, some logs appear to only contain one side (usually the remote) of the conversation, for reasons that are not clear.
+
 A possible cause is related to how Facebook handled multiple-device support: received messages were likely 'broadcast' to all signed-in devices, but transmitted messages from a device other than the computer running Adium were not re-sent out by Facebook's servers, and thus are not included in the Adium log.
+
+### Malformed XML
+
+It appears that some versions of Adium produced malformed XML log files.
+Missing `</chat>` tags are particularly common in some periods (most are dated around early 2003, and the issue was apparently fixed by mid-2004).
+
+### Bad Log File Names
+
+Examples have been found of Adium HTML-based log files with strange separator characters in the date written into the filename.
+(An example is `20050219` on an AdiumHTMLLog file.)
+These files will cause processing errors and should be renamed by hand, replacing the non-ASCII chars with dashes.
 
 ## Licensing
 
