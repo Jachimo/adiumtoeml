@@ -64,6 +64,12 @@ These files can be easily fixed using the Mac OS `sed` command:
 A small Bash script which runs this command against a list of files is included in the `/extras` directory as `fix_xml_close.sh`.
 It is designed to be run against the `failed_YYYY-MM-DD.log` files produced by the `bulk_convert.sh` script.
 
+### Illegal XML Characters
+
+Despite writing files that claim to be well-formed XML 1.0, it appears that some versions of Adium did not sanitize its inputs very well.
+The existence of ASCII control characters (such as hex 0x19, reportedly misused by Microsoft products for 'smart single quote' and seen in copied/pasted content) are especially problematic, as they terminate XML parsing when encountered, and the normal Python `.encode()` and `.decode()` tricks don't seem to strip them.
+The `adium_xml.py` input processor attempts to strip these characters if initial XML parsing fails.
+
 ### Bad Log File Names
 
 Examples have been found of Adium HTML-based log files with strange separator characters in the date written into the filename.
