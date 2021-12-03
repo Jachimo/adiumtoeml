@@ -1,12 +1,12 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 # Bash script to bulk convert chat logs
 # Usage: ./bulk_convert.sh rootdir outdir
 #  where 'rootdir' is the Adium Logs folder or another subfolder containing log files
 
 indir=$1
 outdir=$2
-logfile=converted_`date -I`.log  # `date -I` may not be supported on all systems
-failfile=failed_`date -I`.log    # for unsuccessfully processed files
+logfile=converted_$(date -I).log  # `date -I` may not be supported on all systems
+failfile=failed_$(date -I).log    # for unsuccessfully processed files
 
 mkdir -p "$outdir"  # create output dir if it doesn't already exist
 
