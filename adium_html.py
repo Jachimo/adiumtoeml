@@ -31,7 +31,8 @@ def toconv(fi: TextIO) -> conversation.Conversation:
     if (filepathlist[-4] == 'Adium Logs') or (filepathlist[-4].find('Logs') == 0 and filepathlist[-5] == 'Adium'):
         # We can *probably* assume we're in the Adium Logs tree...
         conv.service = filepathlist[-3].split('.', 1)[0]
-        conv.account = filepathlist[-3].split('.', 1)[1]
+        conv.localaccount  = filepathlist[-3].split('.', 1)[1]
+        conv.remoteaccount = filepathlist[-2]
 
     fi.seek(0)
     divs = fi.read().split('</div>\n')  # Split by <div>

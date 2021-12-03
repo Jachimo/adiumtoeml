@@ -145,10 +145,12 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 line.append('(' + message.date.strftime(datefmt) + ')&nbsp;')
                 line.append('</span>')
             if message.msgfrom:
-                if conv.userid_islocal(message.msgfrom):
-                    line.append('<span class="localname">')  # if from the local user, class it appropriately
+                if conv.userid_islocal(message.msgfrom.lower()):
+                    line.append('<span class="localname">')
+                if conv.userid_isremote(message.msgfrom.lower()):
+                    line.append('<span class="remotename">')
                 else:
-                    line.append('<span class="name">')  # otherwise, generic screenname (likely remote)
+                    line.append('<span class="name">')
                 if conv.get_realname_from_userid(message.msgfrom):
                     line.append(conv.get_realname_from_userid(message.msgfrom) + ':&ensp;')
                 else:

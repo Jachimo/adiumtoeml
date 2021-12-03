@@ -1,11 +1,15 @@
 <style type = text/css>
 .name {
   font-weight: bold;
-  color: red;
+  color: black;
 }
 .localname {
   font-weight: bold;
   color: blue;
+}
+.remotename {
+  font-weight: bold;
+  color: red;
 }
 .timestamp {
   font-size: 10pt;
