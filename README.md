@@ -45,7 +45,7 @@ optional arguments:
 
 ## Known Bugs / Limitations
 
-### Facebook Chat Logs
+### Incomplete Facebook Chat Logs
 
 Adium logs of Facebook chat conversations (from the period when Facebook was using an open standards, XMPP-compatible chat service) seem to be frequently malformed.
 Although the tool attempts to link Facebook user IDs to real names (stored as 'aliases' in the XML), this is only occasionally possible.
@@ -63,6 +63,7 @@ These files can be easily fixed using the Mac OS `sed` command:
 
 A small Bash script which runs this command against a list of files is included in the `/extras` directory as `fix_xml_close.sh`.
 It is designed to be run against the `failed_YYYY-MM-DD.log` files produced by the `bulk_convert.sh` script.
+Original files are preserved with the extension `.bkup` added, so they won't be picked up by the processor on future runs.
 
 ### Illegal XML Characters
 
@@ -75,6 +76,12 @@ The `adium_xml.py` input processor attempts to strip these characters if initial
 Examples have been found of Adium HTML-based log files with strange separator characters in the date written into the filename.
 (An example is `20050219` on an AdiumHTMLLog file.)
 These files will cause processing errors and should be renamed by hand, replacing the non-ASCII chars with dashes.
+
+### Trivial Logs
+
+"Trivial" logs, meaning those without any actual human-generated messages and only system/status messages, do not have enough information to be usefully represented as MIME .eml documents.
+As a result, they are skipped when processing.
+It is possible that a future version of this converter might be able to process them into a different output format, such as JSON.
 
 ## Licensing
 
@@ -90,7 +97,7 @@ End-user support is not available.
 
 ## Errata
 
-#### Adium Log Formats
+### Adium Log Formats
 
 Adium used a variety of filename schemes for its logs over the years.
 Early versions of Adium wrote `.AdiumHTMLLog` files, which contained the messages as HTML tag contents.  Occasionally, logs with an `.html` extension are seen.
