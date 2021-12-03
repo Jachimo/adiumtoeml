@@ -9,7 +9,8 @@ From within the adiumtoeml directory:
 
 If `outputdir` is not specified, the working directory will be used instead.
 
-In most cases, you would probably want to call this from a wrapper script, e.g. with `find` and `xargs` in order to run it on a bunch of logfiles.
+In most cases, you probably want to call this from a wrapper script, e.g. with `find` and `xargs` in order to run it on the entire Adium Logs directory.
+(Usually `~/Documents/Adium/Logs` or potentially also `~/Library/Application Support/Adium/Logs`, but could be placed elsewhere.)
 
 Most Adium logs end in either `.AdiumHTMLLog` or `.chatlog`, although the tool will also process files ending in `.html` or `.xml`.
 
@@ -62,3 +63,12 @@ Please feel free to fork this project; pull requests will be considered as long 
 
 This software is provided without warranty and without any representations as to its functionality for a particular purpose.
 End-user support is not available. 
+
+## Errata
+
+#### Adium Log Formats
+
+Adium used a variety of filename schemes for its logs over the years.
+Early versions of Adium wrote `.AdiumHTMLLog` files, which contained the messages as HTML tag contents.  Occasionally, logs with an `.html` extension are seen.
+Later versions used XML, either written directly to `.chatlog` files, or sometimes written to an `.xml` file hidden inside a `.chatlog` directory (which was made to appear as a file-like Package object on Mac OS X).
+This tool _should_ be able to parse most of them, provided they are well-formed.
