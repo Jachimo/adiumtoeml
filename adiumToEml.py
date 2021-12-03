@@ -68,25 +68,17 @@ def main() -> int:
         else:
             logging.warning('File ' + outpath + ' exists and will be overwritten.')
 
-    # Open input file
-    try:
-        fi = open(args.infilename, 'r')  # fi is a file object
-        logging.debug('Opened ' + args.infilename + ' for reading.')
-    except IOError:
-        logging.critical("I/O Error while opening input: " + args.infilename)
-        return 1
-
     # Newer Adium logs are XML
     if os.path.splitext(args.infilename)[-1] in ['.chatlog', '.xml']:
         logging.debug('XML chat log detected based on file extension.')
-        conv = adium_xml.toconv(fi)
+        with open(args.infilename, 'rb') as fi:  # .chatlogs are UTF-8 XML with BOM, but passed to parser as bytes
+            conv = adium_xml.toconv(fi)
 
     # Older logs are HTML "tag soup" (basically just HTML <body> contents), 1 msg per line
     if os.path.splitext(args.infilename)[-1] in ['.AdiumHTMLLog', '.html']:
         logging.debug('HTML chat log detected based on file extension.')
-        conv = adium_html.toconv(fi)
-
-    fi.close()  # close input file, we are now done with it
+        with open(args.infilename, 'r') as fi:  # .AdiumHTMLLogs are typically ASCII but we let Python guess
+            conv = adium_html.toconv(fi)
 
     try:
         eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)

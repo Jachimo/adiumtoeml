@@ -6,16 +6,24 @@ import os
 import logging
 import dateutil.parser
 import xml.dom.minidom
-from typing import TextIO
+import re
+from typing import BinaryIO
 
 import conversation
 import adium_html
 
 
-def toconv(infile: TextIO) -> conversation.Conversation:
+def toconv(infile: BinaryIO) -> conversation.Conversation:
     """Take a file-like input object containing an XML chat log, and parse to produce a Conversation object"""
     logging.debug('Parsing ' + infile.name)
-    dom = xml.dom.minidom.parse(infile)
+    try:
+        dom = xml.dom.minidom.parse(infile)
+    except xml.parsers.expat.ExpatError:
+        # Strip ASCII control characters (sometimes found in input pasted from Microsoft apps?)
+        logging.debug('XML processing failed with ExpatError; attempting to sanitize input and retry')
+        infile.seek(0)
+        instring = re.sub(r'[\x00-\x08\x0B-\x1F]', '?', infile.read().decode('utf-8-sig', errors='replace'))
+        dom = xml.dom.minidom.parseString(instring)
 
     if dom.firstChild.nodeName != 'chat':  # Do some basic sanity-checking on input
         logging.critical(os.path.basename(infile.name) + ' does not appear to contain <chat> element!')
