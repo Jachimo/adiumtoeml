@@ -13,7 +13,8 @@ class Conversation:
         self.origfilename: str = ''  # Originating file name (where conversation was parsed from)
         self.imclient: str = ''  # IM client program: Adium, iChat, etc.
         self.service: str = ''  # messaging service: AIM, iChat, MSN, etc.
-        self.account: str = ''  # userid of local IM account (set BEFORE populating participants list!)
+        self.localaccount: str = ''  # userid of local IM account
+        self.remoteaccount: str = ''  # userid of remote IM account
         self.participants: list = []  # List of Participant objects
         self.startdate: datetime = False
         self.enddate: datetime = False
@@ -24,29 +25,29 @@ class Conversation:
         if userid not in self.listparticipantuserids():  # if userid is not in any existing Participant.userid
             p = Participant(userid)
             self.participants.append(copy.deepcopy(p))
-        if userid == self.account:  # if the userid we are adding is the local account, mark it as such
+        if userid == self.localaccount:
             self.set_local_account(userid)
+        if userid == self.remoteaccount:
+            self.set_remote_account(userid)
 
     def get_participant(self, userid):
         for p in self.participants:
             if p.userid == userid:
                 return p
 
-    def listparticipantuserids(self):
+    def listparticipantuserids(self) -> list:
         userids = []
         for p in self.participants:
             userids.append(p.userid)
         return userids
 
     def add_realname_to_userid(self, userid, realname):
-        for p in self.participants:
-            if p.userid == userid:
-                p.realname = realname
+        for p in [p for p in self.participants if p.userid == userid]:
+            p.realname = realname
 
     def add_systemid_to_userid(self, userid, systemid):
-        for p in self.participants:
-            if p.userid == userid:
-                p.systemid = systemid
+        for p in [p for p in self.participants if p.userid == userid]:
+            p.systemid = systemid
 
     def get_realname_from_userid(self, userid) -> str:
         for p in [p for p in self.participants if p.userid == userid]:
@@ -54,40 +55,35 @@ class Conversation:
         else:
             return ''
 
-    def set_account(self, account):
-        self.account = account
-
-    def set_service(self, service):
-        self.service = service
-
     def add_message(self, message):
         self.messages.append(message)
 
     def getoldestmessage(self):
-        try:
-            return sorted(self.messages)[0]
-        except IndexError:
-            return False
+        return sorted(self.messages)[0]
 
     def getyoungestmessage(self):
-        try:
-            return sorted(self.messages)[-1]
-        except IndexError:
-            return False
+        return sorted(self.messages)[-1]
 
     def set_local_account(self, userid):
-        for p in self.participants:
-            if p.userid == userid:
-                p.position = 'local'
+        self.localaccount = userid
+        for p in [p for p in self.participants if p.userid == userid]:
+            p.position = 'local'
 
     def set_remote_account(self, userid):
-        for p in self.participants:
-            if p.userid == userid:
-                p.position = 'remote'
+        self.remoteaccount = userid
+        for p in [p for p in self.participants if p.userid == userid]:
+            p.position = 'remote'
 
-    def userid_islocal(self, userid):
+    def userid_islocal(self, userid) -> bool:
         for p in [p for p in self.participants if p.userid == userid]:
             if p.position == 'local':
+                return True
+            else:
+                return False
+
+    def userid_isremote(self, userid) -> bool:
+        for p in [p for p in self.participants if p.userid == userid]:
+            if p.position == 'remote':
                 return True
             else:
                 return False
