@@ -85,7 +85,10 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg.text = get_inner_text(e)
             logging.debug('Message text is: ' + msg.text)
             if e.firstChild.nodeName == 'div':
-                msg.html = e.firstChild.firstChild.toxml()  # strip outermost <div>
+                try:
+                    msg.html = e.firstChild.firstChild.toxml()  # strip outermost <div>
+                except AttributeError:  # usually this is caused by text directly inside the <div> without a <span>
+                    msg.html = e.firstChild.toxml()
             else:
                 msg.html = e.firstChild.toxml()
             logging.debug('Message HTML is: ' + msg.html)
