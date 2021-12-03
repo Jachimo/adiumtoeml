@@ -57,6 +57,12 @@ A possible cause is related to how Facebook handled multiple-device support: rec
 
 It appears that some versions of Adium produced malformed XML log files.
 Missing `</chat>` tags are particularly common in some periods (most are dated around early 2003, and the issue was apparently fixed by mid-2004).
+These files can be easily fixed using the Mac OS `sed` command:
+
+    sed -i '.bkup' 's/<\/?xml>/<\/chat>/' broken.chatlog
+
+A small Bash script which runs this command against a list of files is included in the `/extras` directory as `fix_xml_close.sh`.
+It is designed to be run against the `failed_YYYY-MM-DD.log` files produced by the `bulk_convert.sh` script.
 
 ### Bad Log File Names
 
