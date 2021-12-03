@@ -11,6 +11,7 @@ class Conversation:
     """Top-level class for holding instant messaging Conversations"""
     def __init__(self):
         self.origfilename: str = ''  # Originating file name (where conversation was parsed from)
+        self.filenameuserid: str = ''  # User ID from the filename, sometimes parsed
         self.imclient: str = ''  # IM client program: Adium, iChat, etc.
         self.service: str = ''  # messaging service: AIM, iChat, MSN, etc.
         self.localaccount: str = ''  # userid of local IM account

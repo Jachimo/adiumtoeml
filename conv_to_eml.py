@@ -68,6 +68,10 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     msg_base['To'] = header_to
 
     # Construct 'Date' and 'Subject' headers
+    if conv.filenameuserid:
+        filenameuserid = conv.filenameuserid  # used parsed version if it is set (useful for Facebook logs)
+    else:
+        filenameuserid = conv.origfilename.split(' (')[0]
     if conv.startdate:
         header_date = conv.startdate
     else:
@@ -76,10 +80,10 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
         header_service = conv.service
     else:
         header_service = 'Conversation'
-    if conv.get_realname_from_userid(conv.origfilename.split(' (')[0]):
-        header_withname = conv.get_realname_from_userid(conv.origfilename.split(' (')[0])
+    if conv.get_realname_from_userid(filenameuserid):
+        header_withname = conv.get_realname_from_userid(filenameuserid)
     else:
-        header_withname = conv.origfilename.split(' (')[0]
+        header_withname = filenameuserid
 
     msg_base['Date'] = format_datetime(header_date)
     msg_base['Subject'] = f'{header_service} with {header_withname} on {header_date.strftime("%a, %b %e %Y")}'

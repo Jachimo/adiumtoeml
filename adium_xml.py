@@ -50,6 +50,15 @@ def toconv(infile: BinaryIO) -> conversation.Conversation:
         conv.localaccount  = filepathlist[-4].split('.', 1)[1].lower()
         conv.remoteaccount = filepathlist[-3].lower()
 
+    # Special handling for Facebook Chat usernames, which are stored in directory structure in an odd way
+    if '@chat.facebook.com' in conv.remoteaccount:
+        rawfileid = conv.remoteaccount
+        conv.remoteaccount = re.match("^-([0-9]*)@chat\.facebook\.com$", rawfileid).group(1)
+    conv.filenameuserid = conv.origfilename.split(' (')[0]
+    if '@chat.facebook.com' in conv.filenameuserid:
+        rawfilenameuserid = conv.filenameuserid
+        conv.filenameuserid = re.match("^-([0-9]*)@chat\.facebook\.com$", rawfilenameuserid).group(1)
+
     chat = dom.firstChild  # root element should always be <chat>
     conv.service = chat.getAttribute('service').strip()  # set the service (AIM, MSN, etc.)
     if not conv.remoteaccount:
@@ -77,6 +86,9 @@ def toconv(infile: BinaryIO) -> conversation.Conversation:
             msg.date = dateutil.parser.parse(e.getAttribute('time'))
             msg.msgfrom = e.getAttribute('sender')
             conv.add_participant(msg.msgfrom.lower())
+            if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
+                logging.debug(f'Alias {e.getAttribute("alias")} found for user id {msg.msgfrom}')
+                conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
             ## Start debugging TODO remove me
             logging.debug(f'Added participant (msg.msgfrom) with user id: {msg.msgfrom.lower()}')
             logging.debug(f'Should {msg.msgfrom} be considered local?  {(msg.msgfrom.lower() == conv.localaccount)}')
@@ -86,10 +98,9 @@ def toconv(infile: BinaryIO) -> conversation.Conversation:
                 logging.debug(f'\n  User ID: {conv.get_participant(pid).userid}'
                               f'\n  Position: {conv.get_participant(pid).position}'
                               f'\n  Is Local? {conv.userid_islocal(pid)}'
-                              f'\n  Is Remote? {conv.userid_isremote(pid)}')
+                              f'\n  Is Remote? {conv.userid_isremote(pid)}'
+                              f'\n  Has realname? {conv.get_participant(pid).realname}')
             ## End Debugging
-            if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
-                conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
             msg.text = get_inner_text(e)
             logging.debug('Message text is: ' + msg.text)
             if e.firstChild.nodeName == 'div':
