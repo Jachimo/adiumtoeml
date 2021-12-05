@@ -16,8 +16,6 @@ import conv_to_eml  # Output: MIME .eml file/message
 
 
 def main() -> int:
-    logging.basicConfig(level=logging.DEBUG)  # change level for desired verbosity: DEBUG, INFO, WARNING, ERROR, etc.
-
     # Parse arguments (see https://docs.python.org/3/library/argparse.html)
     parser = argparse.ArgumentParser(description='Convert Adium log files to RFC822 MIME text files (.eml)')
     parser.add_argument('infilename', help='Input file')
@@ -25,7 +23,13 @@ def main() -> int:
                         help='Output directory (optional, defaults to cwd)')
     parser.add_argument('--clobber', action='store_true', help='Overwrite identically-named output files')
     parser.add_argument('--no-background', help='Strips background color from message text', action='store_true')
+    parser.add_argument('--debug', help='Enable debug mode (very verbose output)', action='store_true')
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)  # change level for desired verbosity: DEBUG, INFO, WARNING, ERROR, etc.
 
     if not args.infilename:
         logging.critical("No input file specified.")
@@ -64,27 +68,23 @@ def main() -> int:
         else:
             logging.warning('File ' + outpath + ' exists and will be overwritten.')
 
-    # Open input file
-    try:
-        fi = open(args.infilename, 'r')  # fi is a file object
-        logging.debug('Opened ' + args.infilename + ' for reading.')
-    except IOError:
-        logging.critical("I/O Error while opening input: " + args.infilename)
-        return 1
-
     # Newer Adium logs are XML
     if os.path.splitext(args.infilename)[-1] in ['.chatlog', '.xml']:
         logging.debug('XML chat log detected based on file extension.')
-        conv = adium_xml.toconv(fi)
+        with open(args.infilename, 'rb') as fi:  # .chatlogs are UTF-8 XML with BOM, but passed to parser as bytes
+            conv = adium_xml.toconv(fi)
 
     # Older logs are HTML "tag soup" (basically just HTML <body> contents), 1 msg per line
     if os.path.splitext(args.infilename)[-1] in ['.AdiumHTMLLog', '.html']:
         logging.debug('HTML chat log detected based on file extension.')
-        conv = adium_html.toconv(fi)
+        with open(args.infilename, 'r') as fi:  # .AdiumHTMLLogs are typically ASCII but we let Python guess
+            conv = adium_html.toconv(fi)
 
-    fi.close()  # close input file, we are now done with it
-
-    eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
+    try:
+        eml = conv_to_eml.mimefromconv(conv, args)  # produce MIME message from Conversation (and any attachments)
+    except ValueError:
+        logging.critical('Fatal error while creating MIME document from ' + args.infilename)
+        return 1
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = os.path.basename(sys.argv[0])
@@ -99,7 +99,9 @@ def main() -> int:
     fo.write(eml.as_string())  # Write out the message
     logging.debug('Finished writing ' + outpath)
     fo.close()
-    print(args.infilename + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
+
+    # Write out input name and output Message-ID for logging to a file if desired
+    print(os.path.basename(args.infilename) + '\t' + eml['Message-ID'] + '\x1e')  # fuck 'em if they can't take a joke
 
     return 0  # exit successfully
 

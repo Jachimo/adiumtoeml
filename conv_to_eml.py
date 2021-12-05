@@ -6,7 +6,9 @@ from email.mime.base import MIMEBase
 import hashlib
 import datetime
 import email.encoders
+from email.utils import format_datetime
 import re
+import logging
 
 import conversation
 
@@ -21,9 +23,23 @@ bgcssregex = re.compile('background-color: .*?; *')
 
 def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     """Now we take the Conversation object and make a MIME email message out of it..."""
+    # Do some sanity-checking on the input Conversation and skip trivial (no message contents) logs
+    if not isinstance(conv, conversation.Conversation):
+        error_msg = 'conv_to_eml was passed an unknown or malformed object; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
+    if len(conv.messages) == 0:
+        error_msg = 'Conversation does not appear to contain any Messages; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
+    if len(conv.listparticipantuserids()) < 2:
+        error_msg = 'Conversation does not have enough Participants to construct email-like document; exiting.'
+        logging.warning(error_msg)
+        raise ValueError(error_msg)
 
     # Create a base message object for the entire conversation's components
     msg_base = MIMEMultipart('related')
+
     # Then a sub-part for the two alternative text and HTML components
     msg_texts = MIMEMultipart('alternative')
 
@@ -52,21 +68,25 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
     msg_base['To'] = header_to
 
     # Construct 'Date' and 'Subject' headers
-    if conv.startdate:
-        header_datestr = conv.startdate.strftime("%a, %b %d %Y")  # RFC2822 format
+    if conv.filenameuserid:
+        filenameuserid = conv.filenameuserid  # used parsed version if it is set (useful for Facebook logs)
     else:
-        header_datestr = conv.getoldestmessage().date.strftime("%a, %b %d %Y")
+        filenameuserid = conv.origfilename.split(' (')[0]
+    if conv.startdate:
+        header_date = conv.startdate
+    else:
+        header_date = conv.getoldestmessage().date
     if conv.service:
         header_service = conv.service
     else:
         header_service = 'Conversation'
-    if conv.get_realname_from_userid(conv.origfilename.split(' (')[0]):
-        header_withname = conv.get_realname_from_userid(conv.origfilename.split(' (')[0])
+    if conv.get_realname_from_userid(filenameuserid):
+        header_withname = conv.get_realname_from_userid(filenameuserid)
     else:
-        header_withname = conv.origfilename.split(' (')[0]
+        header_withname = filenameuserid
 
-    msg_base['Date'] = header_datestr
-    msg_base['Subject'] = f'{header_service} with {header_withname} on {header_datestr}'
+    msg_base['Date'] = format_datetime(header_date)
+    msg_base['Subject'] = f'{header_service} with {header_withname} on {header_date.strftime("%a, %b %e %Y")}'
 
     # Determine date format to use in logs
     if (conv.getyoungestmessage().date - conv.getoldestmessage().date) > datetime.timedelta(days=1):
@@ -116,7 +136,6 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 line.append(message.html)
                 line.append('</span>')
             elif message.text:
-                # If there's no HTML provided, create it from text and any styling information provided
                 line.append('<span class="message_text">')
                 line.append(message.text.replace('\n', '<br>'))  # convert any LFs in message text to <br>s
                 line.append('</span>')
@@ -130,25 +149,25 @@ def mimefromconv(conv: conversation.Conversation, args) -> MIMEMultipart:
                 line.append('(' + message.date.strftime(datefmt) + ')&nbsp;')
                 line.append('</span>')
             if message.msgfrom:
-                if conv.userid_islocal(message.msgfrom):
-                    line.append('<span class="localname">')  # if from the local user, class it appropriately
+                if conv.userid_islocal(message.msgfrom.lower()):   # for local participant CSS
+                    line.append('<span class="localname">')
+                elif conv.userid_isremote(message.msgfrom.lower()):  # for remote participant CSS
+                    line.append('<span class="remotename">')
                 else:
-                    line.append('<span class="name">')  # otherwise, generic screenname (likely remote)
+                    line.append('<span class="name">')  # catchall for indeterminate participants
                 if conv.get_realname_from_userid(message.msgfrom):
                     line.append(conv.get_realname_from_userid(message.msgfrom) + ':&ensp;')
                 else:
                     line.append(message.msgfrom + ':&ensp;')
                 line.append('</span>')
-            if message.html:
-                # If message exists as HTML, pass it through
+            if message.html:  # If message exists as HTML, pass it through
                 line.append('<span class="message_text">')
                 if args.no_background:  # strip background-color, e.g. "background-color: #acb5bf;"
                     line.append(re.sub(bgcssregex, '', message.html))  # see regex at top of file
                 else:
                     line.append(message.html)
                 line.append('</span>')
-            elif message.text:
-                # If there's no HTML provided, create it from text and any styling information provided
+            elif message.text:  # If there's no HTML provided, create it from text and styling information
                 line.append('<span')
                 if message.textfont or message.textsize or message.textcolor or message.bgcolor:
                     # only if needed, we add a style attribute to the message text...

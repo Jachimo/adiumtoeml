@@ -6,31 +6,68 @@ import os
 import logging
 import dateutil.parser
 import xml.dom.minidom
-from typing import TextIO
+import re
+from typing import BinaryIO
 
 import conversation
 import adium_html
 
 
-def toconv(infile: TextIO) -> conversation.Conversation:
+def toconv(infile: BinaryIO) -> conversation.Conversation:
     """Take a file-like input object containing an XML chat log, and parse to produce a Conversation object"""
-
-    dom = xml.dom.minidom.parse(infile)
+    logging.debug('Parsing ' + infile.name)
+    try:
+        dom = xml.dom.minidom.parse(infile)
+    except xml.parsers.expat.ExpatError:
+        # Strip ASCII control characters (sometimes found in input pasted from Microsoft apps?)
+        logging.debug('XML processing failed with ExpatError; attempting to sanitize input and retry')
+        infile.seek(0)
+        instring = re.sub(r'[\x00-\x08\x0B-\x1F]', '?', infile.read().decode('utf-8-sig', errors='replace'))
+        dom = xml.dom.minidom.parseString(instring)
 
     if dom.firstChild.nodeName != 'chat':  # Do some basic sanity-checking on input
         logging.critical(os.path.basename(infile.name) + ' does not appear to contain <chat> element!')
         raise ValueError('Malformed or invalid input file')
 
-    chat = dom.firstChild  # root element should always be <chat>
-
     conv = conversation.Conversation()  # instantiate Conversation object
-    conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
     conv.imclient = 'Adium'  # since we are only parsing Adium logs with this module
-    conv.set_service(chat.getAttribute('service'))  # set the service (AIM, MSN, etc.)
-    conv.set_account(chat.getAttribute('account'))  # set conv.account to the local userid
+    conv.origfilename = os.path.basename(infile.name)  # Store name of input file and store for future reference
 
-    logging.debug('IM service is ' + conv.service)
-    logging.debug('Local account is: ' + conv.account)
+    # If possible, determine the IM service based on the grandparent folder name if hierarchy is either:
+    #  /path/to/Adium Logs/AIM.myaccountname/theiraccountname/theiraccountname (date).chatlog
+    #  /path/to/Adium/Logs*/AIM.myaccountname/theiraccountname/theiraccountname (date).chatlog
+    filepathlist = os.path.realpath(infile.name).split(os.path.sep)
+    if os.path.splitext(conv.origfilename)[-1] == '.chatlog' \
+        and ((filepathlist[-4] == 'Adium Logs') or (filepathlist[-4].find('Logs') == 0 and filepathlist[-5] == 'Adium')):
+        logging.debug(f'Detected non-bundled XML .chatlog: {conv.origfilename}')
+        conv.service = filepathlist[-3].split('.', 1)[0]
+        conv.localaccount  = filepathlist[-3].split('.', 1)[1].lower()
+        conv.remoteaccount = filepathlist[-2].lower()
+    if os.path.splitext(conv.origfilename)[-1] == '.xml' \
+        and ((filepathlist[-5] == 'Adium Logs') or (filepathlist[-5].find('Logs') == 0 and filepathlist[-6] == 'Adium')):
+        logging.debug(f'Detected bundled .chatlog with XML file: {conv.origfilename}')
+        conv.service = filepathlist[-4].split('.', 1)[0]
+        conv.localaccount  = filepathlist[-4].split('.', 1)[1].lower()
+        conv.remoteaccount = filepathlist[-3].lower()
+
+    # Special handling for Facebook Chat usernames, which are stored in directory structure in an odd way
+    if '@chat.facebook.com' in conv.remoteaccount:
+        rawfileid = conv.remoteaccount
+        conv.remoteaccount = re.match("^-([0-9]*)@chat\.facebook\.com$", rawfileid).group(1)
+    conv.filenameuserid = conv.origfilename.split(' (')[0]
+    if '@chat.facebook.com' in conv.filenameuserid:
+        rawfilenameuserid = conv.filenameuserid
+        conv.filenameuserid = re.match("^-([0-9]*)@chat\.facebook\.com$", rawfilenameuserid).group(1)
+
+    chat = dom.firstChild  # root element should always be <chat>
+    conv.service = chat.getAttribute('service').strip()  # set the service (AIM, MSN, etc.)
+    if not conv.remoteaccount:
+        logging.debug('Could not determine local account from input path; setting from XML')
+        conv.set_remote_account(chat.getAttribute('account').strip().lower())  # set remote account from XML
+
+    logging.debug('IM service is: ' + conv.service)
+    logging.debug('Local account is: ' + conv.localaccount)
+    logging.debug('Remote account is: ' + conv.remoteaccount)
 
     for e in chat.childNodes:
         if (e.nodeName == 'event') or (e.nodeName == 'status'):  # Handle <event... /> and <status... />
@@ -48,17 +85,34 @@ def toconv(infile: TextIO) -> conversation.Conversation:
             msg = conversation.Message('message')
             msg.date = dateutil.parser.parse(e.getAttribute('time'))
             msg.msgfrom = e.getAttribute('sender')
-            conv.add_participant(msg.msgfrom)
+            conv.add_participant(msg.msgfrom.lower())
             if e.hasAttribute('alias'):  # Facebook logs have an 'alias' attribute containing real name
+                logging.debug(f'Alias {e.getAttribute("alias")} found for user id {msg.msgfrom}')
                 conv.add_realname_to_userid(msg.msgfrom, e.getAttribute('alias'))
+            ## Start debugging TODO remove me
+            logging.debug(f'Added participant (msg.msgfrom) with user id: {msg.msgfrom.lower()}')
+            logging.debug(f'Should {msg.msgfrom} be considered local?  {(msg.msgfrom.lower() == conv.localaccount)}')
+            logging.debug(f'Should {msg.msgfrom} be considered remote?  {(msg.msgfrom.lower() == conv.remoteaccount)}')
+            logging.debug(f'Participant user id list contains {conv.listparticipantuserids()}')
+            for pid in conv.listparticipantuserids():
+                logging.debug(f'\n  User ID: {conv.get_participant(pid).userid}'
+                              f'\n  Position: {conv.get_participant(pid).position}'
+                              f'\n  Is Local? {conv.userid_islocal(pid)}'
+                              f'\n  Is Remote? {conv.userid_isremote(pid)}'
+                              f'\n  Has realname? {conv.get_participant(pid).realname}')
+            ## End Debugging
             msg.text = get_inner_text(e)
             logging.debug('Message text is: ' + msg.text)
             if e.firstChild.nodeName == 'div':
-                msg.html = e.firstChild.firstChild.toxml()  # strip outermost <div>
+                try:
+                    msg.html = e.firstChild.firstChild.toxml()  # strip outermost <div>
+                except AttributeError:  # usually this is caused by text directly inside the <div> without a <span>
+                    msg.html = e.firstChild.toxml()
             else:
                 msg.html = e.firstChild.toxml()
             logging.debug('Message HTML is: ' + msg.html)
             conv.add_message(msg)
+            logging.debug('End of message processing\n')  # TODO remove me
 
     # Get date from filename, if present; otherwise use timestamp from first message
     if (conv.origfilename.find('(') != -1) and (conv.origfilename.find(')') != -1):
