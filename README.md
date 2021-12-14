@@ -67,7 +67,7 @@ Original files are preserved with the extension `.bkup` added, so they won't be 
 
 ### Illegal XML Characters
 
-Despite writing files that claim to be well-formed XML 1.0, it appears that some versions of Adium did not sanitize its inputs very well.
+Despite writing files that claim to be well-formed XML 1.0, it appears that some versions of Adium did not sanitize their inputs very well.
 The existence of ASCII control characters (such as hex 0x19, reportedly misused by Microsoft products for 'smart single quote' and seen in copied/pasted content) are especially problematic, as they terminate XML parsing when encountered, and the normal Python `.encode()` and `.decode()` tricks don't seem to strip them.
 The `adium_xml.py` input processor attempts to strip these characters if initial XML parsing fails.
 
