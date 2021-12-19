@@ -88,9 +88,9 @@ def main() -> int:
         return 1
 
     # Attach original file to output if --attach flag is true
-    if args.attach:
-        with open(args.infilename, 'rb') as fi:
-            eml.attach(fi)
+    #if args.attach:
+    #    with open(args.infilename, 'r') as fi:
+    #        eml.attach(fi)
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = os.path.basename(sys.argv[0])
