@@ -13,6 +13,7 @@ import argparse
 import adium_xml    # Input: newer XML-based Adium (.chatlog) files
 import adium_html   # Input: older HTML-based Adium (.AdiumHTMLLog) files
 import conv_to_eml  # Output: MIME .eml file/message
+import eml_attach
 
 
 def main() -> int:
@@ -88,9 +89,9 @@ def main() -> int:
         return 1
 
     # Attach original file to output if --attach flag is true
-    #if args.attach:
-    #    with open(args.infilename, 'r') as fi:
-    #        eml.attach(fi)
+    if args.attach:
+        with open(args.infilename, 'rb') as fi:
+            eml = eml_attach.attach(fi, eml)
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = os.path.basename(sys.argv[0])
