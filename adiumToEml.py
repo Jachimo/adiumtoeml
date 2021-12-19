@@ -21,7 +21,8 @@ def main() -> int:
     parser.add_argument('infilename', help='Input file')
     parser.add_argument('outdirname', nargs='?', default=os.getcwd(),
                         help='Output directory (optional, defaults to cwd)')
-    parser.add_argument('--clobber', action='store_true', help='Overwrite identically-named output files')
+    parser.add_argument('--clobber', help='Overwrite identically-named output files', action='store_true')
+    parser.add_argument('--attach', help='Attach original log file to output', action='store_true')
     parser.add_argument('--no-background', help='Strips background color from message text', action='store_true')
     parser.add_argument('--debug', help='Enable debug mode (very verbose output)', action='store_true')
     args = parser.parse_args()
@@ -85,6 +86,11 @@ def main() -> int:
     except ValueError:
         logging.critical('Fatal error while creating MIME document from ' + args.infilename)
         return 1
+
+    # Attach original file to output if --attach flag is true
+    if args.attach:
+        with open(args.infilename, 'rb') as fi:
+            eml.attach(fi)
 
     # Set additional headers (comment out if not desired)
     eml['X-Converted-By'] = os.path.basename(sys.argv[0])
