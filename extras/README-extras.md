@@ -1,4 +1,4 @@
-# XML Conversion Extras
+# Extras
 
 This directory contains some "extras" related to Adium log conversion.
 
@@ -9,6 +9,24 @@ This is a small shell script designed to repair Adium XML logs that have a malfo
 During testing, I found that some log files produced during a very specific date range (probably a single point-release of Adium) had `</?xml>` tags where they should have `</chat>` tags, which will cause minidom to error.  Depending on when you used Adium, you may or may not encounter logs like this.
 
 The script takes as input a file containing a list of log files (such as the "failed_YYYY-MM-DD.log" file emitted by adiumToEml) and performs a find/replace on each of them to fix the malformed tag.
+
+## emlToMbox.py
+
+Standalone script which takes a directory of .eml files and combines them into a single Unix .mbox file.
+The resulting .mbox can be imported into Apple Mail or many other MUAs.
+
+Forked from [this Github Gist](https://gist.github.com/kadin2048/c332a572a388acc22d56) and included here for convenience.
+
+## failed_inspect.sh
+
+Script for inspecting files that fail to process, and end up in the "failed" log for some reason.
+When run on the "failed_YYYY-MM-DD.log" file, it will make a copy of each problematic file into a subdirectory, along with a "summaries.txt" file containing the first 10 lines of each, with line numbers.
+This allows you to quickly review the list of failed files and determine which are worth looking at in more detail.
+
+## reprocess_list.sh
+
+Very simple script which simply calls the main converter against a list of  files, one per line, and outputs them to a specified directory.
+Lines in the input are ignored if they begin with a '#' character, allowing files to be progressively removed from processing simply by commenting them out in the input list.
 
 ## format-html
 
