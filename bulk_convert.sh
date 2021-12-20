@@ -18,9 +18,9 @@ mkdir -p "$outdir"  # create output dir if it doesn't already exist
 # Improved method, which writes failures to process to a file, in addition to normal success log
 # Ref. https://unix.stackexchange.com/questions/195677/bash-error-handling-on-find-exec
 find "$indir" -name '*.chatlog' -exec \
-bash -c './adiumToEml.py "$1" "$2" --no-background || echo "$1">"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
+bash -c './adiumToEml.py "$1" "$2" --no-background --attach || echo "$1">"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
 | tee "$outdir"/"$logfile"
 
 find "$indir" -name '*.AdiumHTMLLog' -exec \
-bash -c './adiumToEml.py "$1" "$2" --no-background || echo "$1">>"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
+bash -c './adiumToEml.py "$1" "$2" --no-background --attach || echo "$1">>"$3"' none {} "$outdir" "$outdir"/"$failfile" \; \
 | tee -a "$outdir"/"$logfile"
