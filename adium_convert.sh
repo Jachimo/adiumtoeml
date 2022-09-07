@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Bash script to bulk convert chat logs
-# Usage: ./bulk_convert.sh rootdir outdir
+# Bash script to bulk convert Adium chat logs
+# Usage: ./adium_convert.sh rootdir outdir
 #  where 'rootdir' is the Adium Logs folder or another subfolder containing log files
 
 indir=$1
